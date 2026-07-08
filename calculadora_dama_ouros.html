@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Orçamento — Dama de Ouros</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #C41E3A;
+    --red-dark: #9B1530;
+    --gold: #C9952A;
+    --gold-light: #F5E6C0;
+    --black: #1A1A1A;
+    --gray: #6B6B6B;
+    --light: #F7F4EF;
+    --white: #FFFFFF;
+    --border: #E0D8CC;
+    --success: #2A7A4B;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--light);
+    color: var(--black);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  header {
+    background: var(--red);
+    color: var(--white);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  }
+
+  header .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 18px; color: var(--white);
+    flex-shrink: 0;
+  }
+
+  header h1 { font-size: 17px; font-weight: 600; line-height: 1.2; }
+  header p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+  }
+
+  .card {
+    background: var(--white);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--gray);
+    margin-bottom: 16px;
+  }
+
+  .search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+  }
+
+  .search-wrap input {
+    width: 100%;
+    padding: 11px 14px 11px 38px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    background: var(--white);
+  }
+
+  .search-wrap input:focus { border-color: var(--red); }
+
+  .search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--gray); font-size: 16px; pointer-events: none;
+  }
+
+  .product-list {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--white);
+  }
+
+  .product-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: background 0.1s;
+  }
+
+  .product-item:last-child { border-bottom: none; }
+  .product-item:hover { background: var(--gold-light); }
+  .product-item.selected { background: var(--gold-light); font-weight: 600; }
+
+  .product-item .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    background: var(--red);
+    color: var(--white);
+    flex-shrink: 0;
+  }
+
+  .product-item .badge.B { background: var(--gold); }
+  .product-item .badge.C { background: #555; }
+
+  .no-results {
+    padding: 20px;
+    text-align: center;
+    color: var(--gray);
+    font-size: 14px;
+  }
+
+  .selected-product {
+    background: var(--gold-light);
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--black);
+    margin-top: 12px;
+    display: none;
+  }
+
+  .selected-product.visible { display: block; }
+
+  .fields-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  @media (max-width: 520px) {
+    .fields-row { grid-template-columns: 1fr; }
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-group label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--black);
+  }
+
+  .field-group input, .field-group select {
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+    background: var(--white);
+  }
+
+  .field-group input:focus, .field-group select:focus { border-color: var(--red); }
+
+  .hint {
+    font-size: 12px;
+    color: var(--gray);
+    margin-top: 4px;
+  }
+
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--red);
+    color: var(--white);
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background 0.15s;
+  }
+
+  .calc-btn:hover { background: var(--red-dark); }
+  .calc-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+  .result-card {
+    display: none;
+    background: var(--white);
+    border-radius: 12px;
+    border: 2px solid var(--gold);
+    overflow: hidden;
+  }
+
+  .result-card.visible { display: block; }
+
+  .result-header {
+    background: var(--gold);
+    color: var(--white);
+    padding: 14px 20px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .result-body { padding: 20px; }
+
+  .result-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+
+  .result-row:last-child { border-bottom: none; }
+  .result-row .label { color: var(--gray); }
+  .result-row .value { font-weight: 600; }
+
+  .result-total {
+    background: var(--light);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .result-total .label { font-size: 15px; font-weight: 600; }
+  .result-total .value { font-size: 22px; font-weight: 700; color: var(--red); }
+
+  .whatsapp-block {
+    margin-top: 16px;
+    background: #F0FDF4;
+    border: 1.5px solid #86EFAC;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+
+  .whatsapp-block .wlabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--success);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  .whatsapp-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--black);
+    white-space: pre-wrap;
+    background: var(--white);
+    border-radius: 6px;
+    padding: 10px 12px;
+    border: 1px solid #D1FAE5;
+  }
+
+  .copy-btn {
+    margin-top: 10px;
+    padding: 9px 18px;
+    background: var(--success);
+    color: var(--white);
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .copy-btn:hover { opacity: 0.85; }
+
+  .error-msg {
+    color: var(--red);
+    font-size: 13px;
+    margin-top: 8px;
+    display: none;
+  }
+
+  .error-msg.visible { display: block; }
+
+  .personaliz-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 14px;
+  }
+
+  .toggle-switch {
+    width: 40px; height: 22px;
+    background: var(--border);
+    border-radius: 11px;
+    position: relative;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 16px; height: 16px;
+    background: var(--white);
+    border-radius: 50%;
+    top: 3px; left: 3px;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+
+  input[type=checkbox]:checked + .personaliz-toggle .toggle-switch {
+    background: var(--red);
+  }
+  input[type=checkbox]:checked + .personaliz-toggle .toggle-switch::after {
+    transform: translateX(18px);
+  }
+
+  input[type=checkbox].toggle-input { display: none; }
+
+  .toggle-label { font-size: 14px; font-weight: 500; }
+
+  .lados-field { display: none; }
+  .lados-field.visible { display: flex; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">D</div>
+  <div>
+    <h1>Dama de Ouros Embalagens</h1>
+    <p>Calculadora de Orçamento</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Produto -->
+  <div class="card">
+    <div class="card-title">1. Selecione o Produto</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Digite o nome do produto..." autocomplete="off">
+    </div>
+    <div class="product-list" id="productList"></div>
+    <div class="selected-product" id="selectedProduct"></div>
+  </div>
+
+  <!-- Quantidade e Personalização -->
+  <div class="card">
+    <div class="card-title">2. Quantidade e Personalização</div>
+
+    <div class="fields-row" style="margin-bottom:16px;">
+      <div class="field-group">
+        <label for="qtdInput">Quantidade</label>
+        <input type="number" id="qtdInput" placeholder="Ex: 100" min="1">
+        <span class="hint" id="qtdHint"></span>
+      </div>
+      <div class="field-group">
+        <label for="corSacolaInput">Cor do produto (opcional)</label>
+        <input type="text" id="corSacolaInput" placeholder="Ex: Preto, Branco, Kraft...">
+      </div>
+      <div class="field-group">
+        <label for="corInput">Cor da tinta (opcional)</label>
+        <input type="text" id="corInput" placeholder="Ex: Preto, Azul, Branco...">
+      </div>
+    </div>
+
+    <input type="checkbox" class="toggle-input" id="personalizToggle">
+    <label class="personaliz-toggle" for="personalizToggle">
+      <div class="toggle-switch"></div>
+      <span class="toggle-label">Incluir personalização (silk screen)</span>
+    </label>
+
+    <div class="fields-row lados-field" id="ladosField">
+      <div class="field-group">
+        <label for="ladosInput">Número de lados</label>
+        <select id="ladosInput">
+          <option value="1">1 lado</option>
+          <option value="2">2 lados</option>
+          <option value="3">3 lados</option>
+          <option value="4">4 lados</option>
+        </select>
+        <span class="hint">R$ 0,50 por lado por unidade (grátis acima de 1000un)</span>
+      </div>
+      <div class="field-group">
+        <label for="telaInput">Tela de silk screen</label>
+        <select id="telaInput">
+          <option value="existente">Tela existente — R$ 0,00</option>
+          <option value="nova">Tela nova — R$ 140,00</option>
+        </select>
+        <span class="hint" id="telaHint">⚠️ Tela nova: R$ 140,00 cobrado apenas na primeira compra</span>
+      </div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+    <button class="calc-btn" id="calcBtn">Adicionar ao Pedido</button>
+  </div>
+
+  <!-- Carrinho -->
+  <div class="result-card" id="cartCard" style="display:none;">
+    <div class="result-header" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>🛒 Pedido atual</span>
+      <button onclick="limparPedido()" style="background:rgba(255,255,255,0.2);border:none;color:white;font-size:12px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:inherit;">Limpar tudo</button>
+    </div>
+    <div class="result-body">
+      <div id="cartItems"></div>
+
+      <div class="result-total" style="margin-top:16px;">
+        <span class="label">Total geral</span>
+        <span class="value" id="cartTotal"></span>
+      </div>
+
+      <div class="whatsapp-block" style="margin-top:16px;">
+        <div class="wlabel">📋 Texto para WhatsApp</div>
+        <div class="whatsapp-text" id="whatsappText"></div>
+        <button class="copy-btn" id="copyBtn">Copiar texto</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const PRODUCTS = [{"name": "CX. PAP. CORREIO - 18X12X6", "code": "002152", "group": "A", "prices": {"1": 2.6, "10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "CX. PAP. CORREIO - 25X17X9", "code": "002112", "group": "A", "prices": {"1": 5.4, "10": 5.1, "50": 4.8, "100": 4.4, "250": 4.1, "500": 3.7, "1000": 3.4}}, {"name": "CX. PAP. CORREIO - 30X20X11", "code": "002061", "group": "A", "prices": {"1": 8.2, "10": 7.7, "50": 7.1, "100": 6.6, "250": 6.1, "500": 5.6, "1000": 5.1}}, {"name": "CX. PAP. CORREIO - 34X28X15", "code": "002059", "group": "A", "prices": {"1": 12.8, "10": 12.0, "50": 11.2, "100": 10.4, "250": 9.6, "500": 8.8, "1000": 8.0}}, {"name": "CX. PAP. CORREIO - 35X25X10", "code": "002060", "group": "A", "prices": {"1": 9.4, "10": 8.9, "50": 8.3, "100": 7.7, "250": 7.1, "500": 6.5, "1000": 5.9}}, {"name": "CX. PAP. CORREIO - 35X27X6", "code": "002163", "group": "A", "prices": {"1": 6.9, "10": 6.5, "50": 6.0, "100": 5.6, "250": 5.2, "500": 4.7, "1000": 4.3}}, {"name": "CX. PAP. MALETA - 30X21X18", "code": "002064", "group": "A", "prices": {"1": 8.2, "10": 7.7, "50": 7.1, "100": 6.6, "250": 6.1, "500": 5.6, "1000": 5.1}}, {"name": "CX. PAP. MALETA - 35X8X16", "code": "002062", "group": "A", "prices": {"1": 5.0, "10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "CX. PAP. MALETA - 43X30X30", "code": "002153", "group": "A", "prices": {"1": 11.2, "10": 10.5, "50": 9.8, "100": 9.1, "250": 8.4, "500": 7.7, "1000": 7.0}}, {"name": "CX. PAP. MALETA - 50X40X35", "code": "002076", "group": "A", "prices": {"1": 16.0, "10": 15.0, "50": 14.0, "100": 13.0, "250": 12.0, "500": 11.0, "1000": 10.0}}, {"name": "CX. PAP. MALETA - 54X49X47", "code": "002077", "group": "A", "prices": {"1": 25.0, "10": 23.4, "50": 21.8, "100": 20.3, "250": 18.7, "500": 17.2, "1000": 15.6}}, {"name": "SACOLA LAMINADA 33X25X15", "code": "004036", "group": "A", "prices": {"1": 15.0, "10": 14.1, "50": 13.2, "100": 12.2, "250": 11.3, "500": 10.3, "1000": 9.4}}, {"name": "SACOLA LAMINADA 39X33X15", "code": "004037", "group": "A", "prices": {"1": 19.0, "10": 17.9, "50": 16.7, "100": 15.5, "250": 14.3, "500": 13.1, "1000": 11.9}}, {"name": "SACOLA NAT. ALÇA COLORIDA 16x19x5", "code": "", "group": "A", "prices": {"1": 8.0, "10": 7.5, "50": 7.0, "100": 6.5, "250": 6.0, "500": 5.5, "1000": 5.0}}, {"name": "SACOLA NAT. ALÇA COLORIDA 21x22x14", "code": "", "group": "A", "prices": {"1": 14.0, "10": 12.3, "50": 11.5, "100": 10.7, "250": 9.8, "500": 9.0, "1000": 8.2}}, {"name": "SACOLA NAT. ALÇA COLORIDA 25x28x15", "code": "", "group": "A", "prices": {"1": 16.0, "10": 15.0, "50": 14.0, "100": 13.0, "250": 12.0, "500": 11.0, "1000": 10.0}}, {"name": "ENVELOPE KRAFT E-COMMERCE 20X25X5", "code": "002086", "group": "A", "prices": {"1": 5.0, "10": 4.1, "50": 3.8, "100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "ENVELOPE KRAFT E-COMMERCE 25X35X5", "code": "002176", "group": "A", "prices": {"1": 5.0, "10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "ENVELOPE KRAFT REFORÇADO 25X37CM", "code": "002171", "group": "A", "prices": {"1": 6.0, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SAQUINHO DE ALGODÃO 10X12", "code": "002120", "group": "A", "prices": {"1": 3.0, "10": 2.6, "50": 2.4, "100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "SAQUINHO DE ALGODÃO 12X15", "code": "002121", "group": "A", "prices": {"1": 4.0, "10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SAQUINHO DE ALGODÃO 15X20", "code": "002122", "group": "A", "prices": {"1": 4.0, "10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "SAQUINHO DE ALGODÃO 18X22", "code": "002123", "group": "A", "prices": {"1": 6.0, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SAQUINHO DE ALGODÃO 20X30", "code": "002119", "group": "A", "prices": {"1": 7.0, "10": 6.0, "50": 5.6, "100": 5.2, "250": 4.8, "500": 4.4, "1000": 4.0}}, {"name": "SAQUINHO DE ALGODÃO 20X35", "code": "002124", "group": "A", "prices": {"1": 8.0, "10": 7.1, "50": 6.6, "100": 6.1, "250": 5.6, "500": 5.2, "1000": 4.7}}, {"name": "SAQUINHO DE ALGODÃO 25X35", "code": "002125", "group": "A", "prices": {"1": 10.0, "10": 9.2, "50": 8.5, "100": 7.9, "250": 7.3, "500": 6.7, "1000": 6.1}}, {"name": "SAQUINHO DE ALGODÃO 30X40", "code": "002126", "group": "A", "prices": {"1": 13.0, "10": 11.9, "50": 11.1, "100": 10.3, "250": 9.5, "500": 8.7, "1000": 7.9}}, {"name": "SAQUINHO DE ALGODÃO 40X60", "code": "002136", "group": "A", "prices": {"1": 18.0, "10": 16.8, "50": 15.7, "100": 14.6, "250": 13.4, "500": 12.3, "1000": 11.2}}, {"name": "SACOLA DE ALGODÃO 20X25 - PADRÃO", "code": "002150", "group": "A", "prices": {"1": 12.6, "10": 11.9, "50": 11.1, "100": 10.3, "250": 9.5, "500": 8.7, "1000": 7.9}}, {"name": "SACOLA DE ALGODÃO 35X40 - PADRÃO", "code": "002151", "group": "A", "prices": {"1": 15.4, "10": 14.4, "50": 13.4, "100": 12.5, "250": 11.5, "500": 10.6, "1000": 9.6}}, {"name": "SACOLA TNT ALÇA 38X41", "code": "004023", "group": "A", "prices": {"1": 7.5, "10": 7.1, "50": 6.6, "100": 6.1, "250": 5.6, "500": 5.2, "1000": 4.7}}, {"name": "SACOLA TNT BOCA VAZADA 35X38", "code": "004030", "group": "A", "prices": {"1": 5.1, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SACOLA TRANSPARENTE ALÇA 17X23X7", "code": "004051", "group": "A", "prices": {"1": 6.2, "10": 5.9, "50": 5.5, "100": 5.1, "250": 4.7, "500": 4.3, "1000": 3.9}}, {"name": "SACOLA TRANSPARENTE ALÇA 24X34X12", "code": "004052", "group": "A", "prices": {"1": 10.9, "10": 10.2, "50": 9.5, "100": 8.8, "250": 8.2, "500": 7.5, "1000": 6.8}}, {"name": "SACOLA KRAFT 13X16X8", "code": "004002", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA KRAFT 13X8X39 (VINHO)", "code": "004024", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "SACOLA KRAFT 18X26X10", "code": "004003", "group": "B", "prices": {"10": 1.8, "50": 1.7, "100": 1.6, "250": 1.4, "500": 1.3, "1000": 1.2}}, {"name": "SACOLA KRAFT 24X34X10", "code": "004004", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA KRAFT 31X33X19", "code": "004005", "group": "B", "prices": {"10": 2.6, "50": 2.4, "100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "SACOLA KRAFT 31X41X13", "code": "004006", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA KRAFT 37X46X14", "code": "004008", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA KRAFT 40X33X13", "code": "004007", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA KRAFT 9X23X7", "code": "004038", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PAPEL BRANCO 13X16X8", "code": "004043", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA PAPEL BRANCO 18X26X10", "code": "004017", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PAPEL BRANCO 24X34X11", "code": "004016", "group": "B", "prices": {"10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SACOLA PAPEL BRANCO 31X33X19", "code": "004029", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA PAPEL BRANCO 31X41X15", "code": "004018", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA PAPEL COLORIDO 18X22X9", "code": "004049", "group": "B", "prices": {"10": 3.3, "50": 3.1, "100": 2.9, "250": 2.6, "500": 2.4, "1000": 2.2}}, {"name": "SACOLA PAPEL COLORIDO 24X34X11", "code": "004048", "group": "B", "prices": {"10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SACOLA PAPEL OFFSET 160G 14X15X8", "code": "004047", "group": "B", "prices": {"10": 5.4, "50": 5.0, "100": 4.7, "250": 4.3, "500": 4.0, "1000": 3.6}}, {"name": "SACOLA PAPEL OFFSET 160G 22X33X9", "code": "004032", "group": "B", "prices": {"10": 8.7, "50": 8.1, "100": 7.5, "250": 7.0, "500": 6.4, "1000": 5.8}}, {"name": "SACOLA PAPEL OFFSET 160G 40X27X12", "code": "004033", "group": "B", "prices": {"10": 11.6, "50": 10.8, "100": 10.0, "250": 9.2, "500": 8.5, "1000": 7.7}}, {"name": "SACOLA PAPEL OFFSET 160G 47X34X14", "code": "004034", "group": "B", "prices": {"10": 13.8, "50": 12.9, "100": 12.0, "250": 11.0, "500": 10.1, "1000": 9.2}}, {"name": "VELUDO 10X12 OURO", "code": "002139", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 10X12 PRATA", "code": "002138", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 10X12 PRETO", "code": "002137", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 12X15 OURO", "code": "002142", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "VELUDO 12X15 PRATA", "code": "002141", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "VELUDO 12X15 PRETO", "code": "002140", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "SACO JUTA 10X15CM", "code": "002177", "group": "B", "prices": {"10": 2.9, "50": 2.7, "100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "SACO ORGANZA BRANCA 10X15", "code": "002135", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA BRANCA 7X9", "code": "002134", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA PRETO 10X15", "code": "002133", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA PRETO 7X9", "code": "002132", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER BRANCO 14X18", "code": "002164", "group": "C", "prices": {"100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER BRANCO 15X20", "code": "002165", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "EMB. FOSCO ZIPER BRANCO 18X25", "code": "002166", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMB. FOSCO ZIPER BRANCO 20X30", "code": "002167", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMB. FOSCO ZIPER BRANCO 25X35", "code": "002168", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMB. FOSCO ZIPER BRANCO 30X40", "code": "002169", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMB. FOSCO ZIPER BRANCO 35X45", "code": "002173", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMB. FOSCO ZIPER PRETO 14X18", "code": "002154", "group": "C", "prices": {"100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER PRETO 15X20", "code": "002147", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "EMB. FOSCO ZIPER PRETO 18X25", "code": "002129", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMB. FOSCO ZIPER PRETO 20X30", "code": "002148", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMB. FOSCO ZIPER PRETO 25X35", "code": "002130", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMB. FOSCO ZIPER PRETO 30X40", "code": "002131", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMB. FOSCO ZIPER PRETO 35X45", "code": "002162", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMBALAGEM PVC BOTÃO 01 - 10X10/ 100UN", "code": "002028", "group": "C", "prices": {"100": 1.2, "250": 1.1, "500": 1.0, "1000": 0.9}}, {"name": "EMBALAGEM PVC BOTÃO 02 - 12X14/ 100UN", "code": "002029", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC BOTÃO 03 - 15X13,5/ 100UN", "code": "002030", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMBALAGEM PVC BOTÃO 04 - 18,5X15/ 100UN", "code": "002031", "group": "C", "prices": {"100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "EMBALAGEM PVC BOTÃO 05 - 22,5X14/ 100UN", "code": "002032", "group": "C", "prices": {"100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "EMBALAGEM PVC BOTÃO 06 - 35X17/ 100UN", "code": "002033", "group": "C", "prices": {"100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "EMBALAGEM PVC BOTÃO 07 - 19X21/ 100UN", "code": "002034", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMBALAGEM PVC BOTÃO 08 - 21X24/ 100UN", "code": "002035", "group": "C", "prices": {"100": 2.3, "250": 2.2, "500": 2.0, "1000": 1.8}}, {"name": "EMBALAGEM PVC BOTÃO 09 - 17X35/ 100UN", "code": "002036", "group": "C", "prices": {"100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "EMBALAGEM PVC BOTÃO 10 - 20X40/ 100UN", "code": "002037", "group": "C", "prices": {"100": 2.9, "250": 2.6, "500": 2.4, "1000": 2.2}}, {"name": "EMBALAGEM PVC BOTÃO 11 - 26X34/ 100UN", "code": "002038", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMBALAGEM PVC BOTÃO 12 - 32X37/ 100UN", "code": "002039", "group": "C", "prices": {"100": 4.4, "250": 4.1, "500": 3.7, "1000": 3.4}}, {"name": "EMBALAGEM PVC BOTÃO 13 - 40X45/ 10UN", "code": "002040", "group": "C", "prices": {"100": 7.8, "250": 7.2, "500": 6.6, "1000": 6.0}}, {"name": "EMBALAGEM PVC ZIPER N0 - 8X8CM/ 100UN", "code": "002157", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC ZIPER N1 - 10X10/ 100UN", "code": "002158", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC ZIPER N2 - 12X12/ 100UN", "code": "002159", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMBALAGEM PVC ZIPER N3 - 15X15/ 100UN", "code": "002160", "group": "C", "prices": {"100": 2.0, "250": 1.8, "500": 1.7, "1000": 1.5}}, {"name": "EMBALAGEM PVC ZIPER N4 - 18,5X15/ 100UN", "code": "002041", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMBALAGEM PVC ZIPER N5 - 19X21/ 100UN", "code": "002042", "group": "C", "prices": {"100": 3.1, "250": 2.9, "500": 2.6, "1000": 2.4}}, {"name": "EMBALAGEM PVC ZIPER N6 - 20X24/ 100UN", "code": "002043", "group": "C", "prices": {"100": 3.4, "250": 3.1, "500": 2.9, "1000": 2.6}}, {"name": "EMBALAGEM PVC ZIPER N7 - 21X25/ 100UN", "code": "002110", "group": "C", "prices": {"100": 4.9, "250": 4.6, "500": 4.2, "1000": 3.8}}, {"name": "EMBALAGEM PVC ZIPER N8 - 27X30/ 100UN", "code": "002111", "group": "C", "prices": {"100": 4.9, "250": 4.6, "500": 4.2, "1000": 3.8}}, {"name": "SACOLA PLASTICA ALÇA 30X45", "code": "", "group": "C", "prices": {"100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PLASTICA ALÇA 40X50", "code": "", "group": "C", "prices": {"100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "SACOLA PLASTICA ALÇA 45X55", "code": "", "group": "C", "prices": {"100": 3.1, "250": 2.9, "500": 2.6, "1000": 2.4}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 20X30", "code": "", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 30X40", "code": "", "group": "C", "prices": {"100": 1.3, "250": 1.2, "500": 1.1, "1000": 1.0}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 40x50", "code": "", "group": "C", "prices": {"100": 2.0, "250": 1.8, "500": 1.7, "1000": 1.5}}, {"name": "SAQUINHO CORREIO 13X25", "code": "002071", "group": "C", "prices": {"10": 1.4, "50": 0.7, "100": 0.6, "250": 0.6, "500": 0.5, "1000": 0.4}}, {"name": "SAQUINHO CORREIO 19X25", "code": "002072", "group": "C", "prices": {"10": 1.8, "50": 0.9, "100": 0.8, "250": 0.7, "500": 0.6, "1000": 0.5}}, {"name": "SAQUINHO CORREIO 20X30", "code": "002172", "group": "C", "prices": {"10": 1.4, "50": 0.7, "100": 0.6, "250": 0.6, "500": 0.5, "1000": 0.4}}, {"name": "SAQUINHO CORREIO 26X36", "code": "002078", "group": "C", "prices": {"10": 3.5, "50": 1.8, "100": 1.6, "250": 1.4, "500": 1.2, "1000": 1.0}}, {"name": "SAQUINHO CORREIO 26X36 TYF/ROSA", "code": "002179", "group": "C", "prices": {"10": 7.0, "50": 3.6, "100": 3.2, "250": 2.8, "500": 2.4, "1000": 2.0}}, {"name": "SAQUINHO CORREIO 32X40", "code": "002073", "group": "C", "prices": {"10": 4.6, "50": 2.3, "100": 2.1, "250": 1.8, "500": 1.6, "1000": 1.3}}, {"name": "SAQUINHO CORREIO 32X40 TYF/ROSA", "code": "002180", "group": "C", "prices": {"10": 9.5, "50": 4.9, "100": 4.3, "250": 3.8, "500": 3.2, "1000": 2.7}}, {"name": "SAQUINHO CORREIO 40X40", "code": "002074", "group": "C", "prices": {"10": 3.9, "50": 2.0, "100": 1.8, "250": 1.5, "500": 1.3, "1000": 1.1}}, {"name": "SAQUINHO CORREIO 40X50", "code": "002170", "group": "C", "prices": {"10": 7.7, "50": 4.0, "100": 3.5, "250": 3.1, "500": 2.6, "1000": 2.2}}, {"name": "SAQUINHO CORREIO 40X50 TYF/ROSA", "code": "002181", "group": "C", "prices": {"10": 14.0, "50": 7.2, "100": 6.4, "250": 5.6, "500": 4.8, "1000": 4.0}}, {"name": "SAQUINHO CORREIO 40X60", "code": "002175", "group": "C", "prices": {"10": 9.8, "50": 5.0, "100": 4.5, "250": 3.9, "500": 3.4, "1000": 2.8}}, {"name": "SAQUINHO CORREIO 50X60", "code": "002075", "group": "C", "prices": {"10": 10.2, "50": 5.2, "100": 4.6, "250": 4.1, "500": 3.5, "1000": 2.9}}, {"name": "SAQUINHO CORREIO 50X60 COLORIDO", "code": "002174", "group": "C", "prices": {"10": 13.0, "50": 6.7, "100": 5.9, "250": 5.2, "500": 4.4, "1000": 3.7}}, {"name": "SAQUINHO CORREIO VAZADO 32X40", "code": "002161", "group": "C", "prices": {"10": 6.0, "50": 3.1, "100": 2.7, "250": 2.4, "500": 2.0, "1000": 1.7}}];
+
+let selectedProduct = null;
+let cart = [];
+
+function fmt(v) {
+  return 'R$ ' + v.toFixed(2).replace('.', ',');
+}
+
+function getBestPrice(product, qty) {
+  const qtys = Object.keys(product.prices).map(Number).sort((a, b) => b - a);
+  for (const q of qtys) {
+    if (qty >= q) return { qty: q, price: product.prices[String(q)] };
+  }
+  const minQty = Math.min(...qtys);
+  return { qty: minQty, price: product.prices[String(minQty)] };
+}
+
+function renderList(filter) {
+  const list = document.getElementById('productList');
+  const filtered = filter
+    ? PRODUCTS.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || p.code.includes(filter))
+    : PRODUCTS;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="no-results">Nenhum produto encontrado</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map((p) => `
+    <div class="product-item${selectedProduct && selectedProduct.name === p.name ? ' selected' : ''}"
+         onclick="selectProduct(${PRODUCTS.indexOf(p)})">
+      <span>${p.name}</span>
+      <span class="badge ${p.group}">${p.group}</span>
+    </div>
+  `).join('');
+}
+
+function selectProduct(idx) {
+  selectedProduct = PRODUCTS[idx];
+  const el = document.getElementById('selectedProduct');
+  el.textContent = '✓ ' + selectedProduct.name;
+  el.classList.add('visible');
+  const qtys = Object.keys(selectedProduct.prices).map(Number).sort((a, b) => a - b);
+  document.getElementById('qtdHint').textContent = 'Faixas disponíveis: ' + qtys.join(' / ') + ' un';
+  renderList(document.getElementById('searchInput').value);
+  document.getElementById('errorMsg').classList.remove('visible');
+}
+
+document.getElementById('searchInput').addEventListener('input', e => renderList(e.target.value));
+
+document.getElementById('personalizToggle').addEventListener('change', function() {
+  document.getElementById('ladosField').classList.toggle('visible', this.checked);
+});
+
+function renderCart() {
+  const cartCard = document.getElementById('cartCard');
+  const cartItems = document.getElementById('cartItems');
+
+  if (cart.length === 0) {
+    cartCard.style.display = 'none';
+    return;
+  }
+
+  cartCard.style.display = 'block';
+
+  let totalGeral = 0;
+  let html = '';
+
+  cart.forEach((item, idx) => {
+    totalGeral += item.totalItem;
+    html += `
+      <div style="border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:10px;background:var(--light);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+          <strong style="font-size:14px;flex:1;margin-right:8px;">${item.nome}</strong>
+          <button onclick="removerItem(${idx})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;" title="Remover">×</button>
+        </div>
+        <div style="font-size:13px;color:var(--gray);display:flex;flex-wrap:wrap;gap:6px 16px;">
+          <span>📦 ${item.qtd.toLocaleString('pt-BR')} un</span>
+          ${item.corSacola ? `<span>🎨 Cor: ${item.corSacola}</span>` : ''}
+          <span>💰 ${fmt(item.precoUnit)}/un</span>
+          ${item.personaliz ? `<span>🖌️ ${item.lados} lado(s)</span>` : ''}
+          ${item.cor ? `<span>🖊️ Tinta: ${item.cor}</span>` : ''}
+          ${item.telaNova ? `<span>🖼️ Tela nova +R$140</span>` : ''}
+        </div>
+        <div style="margin-top:8px;font-size:14px;font-weight:600;color:var(--red);">
+          Subtotal: ${fmt(item.totalItem)}
+        </div>
+      </div>
+    `;
+  });
+
+  cartItems.innerHTML = html;
+  document.getElementById('cartTotal').textContent = fmt(totalGeral);
+
+  // WhatsApp text
+  const hoje = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  let wtext = `*Orçamento — Dama de Ouros Embalagens*\n${hoje}\n\n`;
+  cart.forEach((item, idx) => {
+    wtext += `*Item ${idx + 1}: ${item.nome}*\n`;
+    wtext += `  Qtd: ${item.qtd.toLocaleString('pt-BR')} unidades\n`;
+    if (item.corSacola) wtext += `  Cor do produto: ${item.corSacola}\n`;
+    if (item.personaliz) {
+      if (item.qtd >= 1000) {
+        if (item.lados === 1) {
+          wtext += `  Personalização: 1 lado — GRÁTIS\n`;
+        } else {
+          wtext += `  Personalização: ${item.lados} lados (1 grátis + ${item.lados - 1} cobrado${item.lados - 1 > 1 ? 's' : ''})\n`;
+        }
+      } else {
+        wtext += `  Personalização: ${item.lados} lado(s)\n`;
+      }
+      if (item.cor) wtext += `  Cor: ${item.cor}\n`;
+      if (item.telaNova) wtext += `  Tela nova: R$ 140,00 _(1ª compra)_\n`;
+    }
+    wtext += `  Unitário: ${fmt(item.precoUnit)}\n`;
+    wtext += `  Subtotal: ${fmt(item.totalItem)}\n\n`;
+  });
+  wtext += `✅ *TOTAL GERAL: ${fmt(totalGeral)}*\n\n`;
+
+  // Calcular 20 dias úteis a partir de hoje
+  function addWorkdays(date, days) {
+    let d = new Date(date);
+    let added = 0;
+    while (added < days) {
+      d.setDate(d.getDate() + 1);
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) added++;
+    }
+    return d;
+  }
+  const dataEntrega = addWorkdays(new Date(), 20);
+  const entregaStr = dataEntrega.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+  wtext += `*Pagamento:* A definir (50% sinal / 50% na entrega ou link de cartão)\n`;
+  wtext += `*Previsão de entrega:* ${entregaStr} _(20 dias úteis)_`;
+
+  document.getElementById('whatsappText').textContent = wtext;
+  cartCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function removerItem(idx) {
+  cart.splice(idx, 1);
+  renderCart();
+}
+
+function limparPedido() {
+  cart = [];
+  renderCart();
+}
+
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.classList.remove('visible');
+
+  if (!selectedProduct) {
+    errorEl.textContent = 'Selecione um produto antes de adicionar.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  const qtdRaw = parseInt(document.getElementById('qtdInput').value);
+  if (!qtdRaw || qtdRaw < 1) {
+    errorEl.textContent = 'Informe uma quantidade válida.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  const personaliz = document.getElementById('personalizToggle').checked;
+  const lados = parseInt(document.getElementById('ladosInput').value) || 1;
+  const cor = document.getElementById('corInput').value.trim();
+  const corSacola = document.getElementById('corSacolaInput').value.trim();
+  const telaNova = personaliz && document.getElementById('telaInput').value === 'nova';
+
+  const { price: precoBase } = getBestPrice(selectedProduct, qtdRaw);
+  // Lados cobrados: abaixo de 1000un cobra tudo, acima de 1000un 1 lado é grátis
+  const ladosCobrados = personaliz ? (qtdRaw >= 1000 ? Math.max(0, lados - 1) : lados) : 0;
+  const personalizUnitario = ladosCobrados * 0.5;
+  const precoUnit = precoBase + personalizUnitario;
+  const custoTela = telaNova ? 140 : 0;
+  const totalItem = precoUnit * qtdRaw + custoTela;
+
+  cart.push({
+    nome: selectedProduct.name,
+    qtd: qtdRaw,
+    precoBase,
+    personalizUnitario,
+    precoUnit,
+    personaliz,
+    lados,
+    cor,
+    corSacola,
+    telaNova,
+    custoTela,
+    totalItem
+  });
+
+  // Limpa os campos para o próximo item
+  selectedProduct = null;
+  document.getElementById('selectedProduct').classList.remove('visible');
+  document.getElementById('qtdInput').value = '';
+  document.getElementById('corInput').value = '';
+  document.getElementById('corSacolaInput').value = '';
+  document.getElementById('qtdHint').textContent = '';
+  document.getElementById('personalizToggle').checked = false;
+  document.getElementById('ladosField').classList.remove('visible');
+  document.getElementById('telaInput').value = 'existente';
+  document.getElementById('searchInput').value = '';
+  renderList('');
+  renderCart();
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = document.getElementById('whatsappText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar texto', 2000);
+  });
+});
+
+renderList('');
+</script>
+</body>
+</html>
+const PRODUCTS = [{"name": "CX. PAP. CORREIO - 18X12X6", "code": "002152", "group": "A", "prices": {"1": 2.6, "10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "CX. PAP. CORREIO - 25X17X9", "code": "002112", "group": "A", "prices": {"1": 5.4, "10": 5.1, "50": 4.8, "100": 4.4, "250": 4.1, "500": 3.7, "1000": 3.4}}, {"name": "CX. PAP. CORREIO - 30X20X11", "code": "002061", "group": "A", "prices": {"1": 8.2, "10": 7.7, "50": 7.1, "100": 6.6, "250": 6.1, "500": 5.6, "1000": 5.1}}, {"name": "CX. PAP. CORREIO - 34X28X15", "code": "002059", "group": "A", "prices": {"1": 12.8, "10": 12.0, "50": 11.2, "100": 10.4, "250": 9.6, "500": 8.8, "1000": 8.0}}, {"name": "CX. PAP. CORREIO - 35X25X10", "code": "002060", "group": "A", "prices": {"1": 9.4, "10": 8.9, "50": 8.3, "100": 7.7, "250": 7.1, "500": 6.5, "1000": 5.9}}, {"name": "CX. PAP. CORREIO - 35X27X6", "code": "002163", "group": "A", "prices": {"1": 6.9, "10": 6.5, "50": 6.0, "100": 5.6, "250": 5.2, "500": 4.7, "1000": 4.3}}, {"name": "CX. PAP. MALETA - 30X21X18", "code": "002064", "group": "A", "prices": {"1": 8.2, "10": 7.7, "50": 7.1, "100": 6.6, "250": 6.1, "500": 5.6, "1000": 5.1}}, {"name": "CX. PAP. MALETA - 35X8X16", "code": "002062", "group": "A", "prices": {"1": 5.0, "10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "CX. PAP. MALETA - 43X30X30", "code": "002153", "group": "A", "prices": {"1": 11.2, "10": 10.5, "50": 9.8, "100": 9.1, "250": 8.4, "500": 7.7, "1000": 7.0}}, {"name": "CX. PAP. MALETA - 50X40X35", "code": "002076", "group": "A", "prices": {"1": 16.0, "10": 15.0, "50": 14.0, "100": 13.0, "250": 12.0, "500": 11.0, "1000": 10.0}}, {"name": "CX. PAP. MALETA - 54X49X47", "code": "002077", "group": "A", "prices": {"1": 25.0, "10": 23.4, "50": 21.8, "100": 20.3, "250": 18.7, "500": 17.2, "1000": 15.6}}, {"name": "SACOLA LAMINADA 33X25X15", "code": "004036", "group": "A", "prices": {"1": 15.0, "10": 14.1, "50": 13.2, "100": 12.2, "250": 11.3, "500": 10.3, "1000": 9.4}}, {"name": "SACOLA LAMINADA 39X33X15", "code": "004037", "group": "A", "prices": {"1": 19.0, "10": 17.9, "50": 16.7, "100": 15.5, "250": 14.3, "500": 13.1, "1000": 11.9}}, {"name": "SACOLA NAT. ALÇA COLORIDA 16x19x5", "code": "", "group": "A", "prices": {"1": 8.0, "10": 7.5, "50": 7.0, "100": 6.5, "250": 6.0, "500": 5.5, "1000": 5.0}}, {"name": "SACOLA NAT. ALÇA COLORIDA 21x22x14", "code": "", "group": "A", "prices": {"1": 14.0, "10": 12.3, "50": 11.5, "100": 10.7, "250": 9.8, "500": 9.0, "1000": 8.2}}, {"name": "SACOLA NAT. ALÇA COLORIDA 25x28x15", "code": "", "group": "A", "prices": {"1": 16.0, "10": 15.0, "50": 14.0, "100": 13.0, "250": 12.0, "500": 11.0, "1000": 10.0}}, {"name": "ENVELOPE KRAFT E-COMMERCE 20X25X5", "code": "002086", "group": "A", "prices": {"1": 5.0, "10": 4.1, "50": 3.8, "100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "ENVELOPE KRAFT E-COMMERCE 25X35X5", "code": "002176", "group": "A", "prices": {"1": 5.0, "10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "ENVELOPE KRAFT REFORÇADO 25X37CM", "code": "002171", "group": "A", "prices": {"1": 6.0, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SAQUINHO DE ALGODÃO 10X12", "code": "002120", "group": "A", "prices": {"1": 3.0, "10": 2.6, "50": 2.4, "100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "SAQUINHO DE ALGODÃO 12X15", "code": "002121", "group": "A", "prices": {"1": 4.0, "10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SAQUINHO DE ALGODÃO 15X20", "code": "002122", "group": "A", "prices": {"1": 4.0, "10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "SAQUINHO DE ALGODÃO 18X22", "code": "002123", "group": "A", "prices": {"1": 6.0, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SAQUINHO DE ALGODÃO 20X30", "code": "002119", "group": "A", "prices": {"1": 7.0, "10": 6.0, "50": 5.6, "100": 5.2, "250": 4.8, "500": 4.4, "1000": 4.0}}, {"name": "SAQUINHO DE ALGODÃO 20X35", "code": "002124", "group": "A", "prices": {"1": 8.0, "10": 7.1, "50": 6.6, "100": 6.1, "250": 5.6, "500": 5.2, "1000": 4.7}}, {"name": "SAQUINHO DE ALGODÃO 25X35", "code": "002125", "group": "A", "prices": {"1": 10.0, "10": 9.2, "50": 8.5, "100": 7.9, "250": 7.3, "500": 6.7, "1000": 6.1}}, {"name": "SAQUINHO DE ALGODÃO 30X40", "code": "002126", "group": "A", "prices": {"1": 13.0, "10": 11.9, "50": 11.1, "100": 10.3, "250": 9.5, "500": 8.7, "1000": 7.9}}, {"name": "SAQUINHO DE ALGODÃO 40X60", "code": "002136", "group": "A", "prices": {"1": 18.0, "10": 16.8, "50": 15.7, "100": 14.6, "250": 13.4, "500": 12.3, "1000": 11.2}}, {"name": "SACOLA DE ALGODÃO 20X25 - PADRÃO", "code": "002150", "group": "A", "prices": {"1": 12.6, "10": 11.9, "50": 11.1, "100": 10.3, "250": 9.5, "500": 8.7, "1000": 7.9}}, {"name": "SACOLA DE ALGODÃO 35X40 - PADRÃO", "code": "002151", "group": "A", "prices": {"1": 15.4, "10": 14.4, "50": 13.4, "100": 12.5, "250": 11.5, "500": 10.6, "1000": 9.6}}, {"name": "SACOLA TNT ALÇA 38X41", "code": "004023", "group": "A", "prices": {"1": 7.5, "10": 7.1, "50": 6.6, "100": 6.1, "250": 5.6, "500": 5.2, "1000": 4.7}}, {"name": "SACOLA TNT BOCA VAZADA 35X38", "code": "004030", "group": "A", "prices": {"1": 5.1, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SACOLA TRANSPARENTE ALÇA 17X23X7", "code": "004051", "group": "A", "prices": {"1": 6.2, "10": 5.9, "50": 5.5, "100": 5.1, "250": 4.7, "500": 4.3, "1000": 3.9}}, {"name": "SACOLA TRANSPARENTE ALÇA 24X34X12", "code": "004052", "group": "A", "prices": {"1": 10.9, "10": 10.2, "50": 9.5, "100": 8.8, "250": 8.2, "500": 7.5, "1000": 6.8}}, {"name": "SACOLA KRAFT 13X16X8", "code": "004002", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA KRAFT 13X8X39 (VINHO)", "code": "004024", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "SACOLA KRAFT 18X26X10", "code": "004003", "group": "B", "prices": {"10": 1.8, "50": 1.7, "100": 1.6, "250": 1.4, "500": 1.3, "1000": 1.2}}, {"name": "SACOLA KRAFT 24X34X10", "code": "004004", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA KRAFT 31X33X19", "code": "004005", "group": "B", "prices": {"10": 2.6, "50": 2.4, "100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "SACOLA KRAFT 31X41X13", "code": "004006", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA KRAFT 37X46X14", "code": "004008", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA KRAFT 40X33X13", "code": "004007", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA KRAFT 9X23X7", "code": "004038", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PAPEL BRANCO 13X16X8", "code": "004043", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA PAPEL BRANCO 18X26X10", "code": "004017", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PAPEL BRANCO 24X34X11", "code": "004016", "group": "B", "prices": {"10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SACOLA PAPEL BRANCO 31X33X19", "code": "004029", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA PAPEL BRANCO 31X41X15", "code": "004018", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA PAPEL COLORIDO 18X22X9", "code": "004049", "group": "B", "prices": {"10": 3.3, "50": 3.1, "100": 2.9, "250": 2.6, "500": 2.4, "1000": 2.2}}, {"name": "SACOLA PAPEL COLORIDO 24X34X11", "code": "004048", "group": "B", "prices": {"10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SACOLA PAPEL OFFSET 160G 14X15X8", "code": "004047", "group": "B", "prices": {"10": 5.4, "50": 5.0, "100": 4.7, "250": 4.3, "500": 4.0, "1000": 3.6}}, {"name": "SACOLA PAPEL OFFSET 160G 22X33X9", "code": "004032", "group": "B", "prices": {"10": 8.7, "50": 8.1, "100": 7.5, "250": 7.0, "500": 6.4, "1000": 5.8}}, {"name": "SACOLA PAPEL OFFSET 160G 40X27X12", "code": "004033", "group": "B", "prices": {"10": 11.6, "50": 10.8, "100": 10.0, "250": 9.2, "500": 8.5, "1000": 7.7}}, {"name": "SACOLA PAPEL OFFSET 160G 47X34X14", "code": "004034", "group": "B", "prices": {"10": 13.8, "50": 12.9, "100": 12.0, "250": 11.0, "500": 10.1, "1000": 9.2}}, {"name": "VELUDO 10X12 OURO", "code": "002139", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 10X12 PRATA", "code": "002138", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 10X12 PRETO", "code": "002137", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 12X15 OURO", "code": "002142", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "VELUDO 12X15 PRATA", "code": "002141", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "VELUDO 12X15 PRETO", "code": "002140", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "SACO JUTA 10X15CM", "code": "002177", "group": "B", "prices": {"10": 2.9, "50": 2.7, "100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "SACO ORGANZA BRANCA 10X15", "code": "002135", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA BRANCA 7X9", "code": "002134", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA PRETO 10X15", "code": "002133", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA PRETO 7X9", "code": "002132", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER BRANCO 14X18", "code": "002164", "group": "C", "prices": {"100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER BRANCO 15X20", "code": "002165", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "EMB. FOSCO ZIPER BRANCO 18X25", "code": "002166", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMB. FOSCO ZIPER BRANCO 20X30", "code": "002167", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMB. FOSCO ZIPER BRANCO 25X35", "code": "002168", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMB. FOSCO ZIPER BRANCO 30X40", "code": "002169", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMB. FOSCO ZIPER BRANCO 35X45", "code": "002173", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMB. FOSCO ZIPER PRETO 14X18", "code": "002154", "group": "C", "prices": {"100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER PRETO 15X20", "code": "002147", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "EMB. FOSCO ZIPER PRETO 18X25", "code": "002129", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMB. FOSCO ZIPER PRETO 20X30", "code": "002148", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMB. FOSCO ZIPER PRETO 25X35", "code": "002130", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMB. FOSCO ZIPER PRETO 30X40", "code": "002131", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMB. FOSCO ZIPER PRETO 35X45", "code": "002162", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMBALAGEM PVC BOTÃO 01 - 10X10/ 100UN", "code": "002028", "group": "C", "prices": {"100": 1.2, "250": 1.1, "500": 1.0, "1000": 0.9}}, {"name": "EMBALAGEM PVC BOTÃO 02 - 12X14/ 100UN", "code": "002029", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC BOTÃO 03 - 15X13,5/ 100UN", "code": "002030", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMBALAGEM PVC BOTÃO 04 - 18,5X15/ 100UN", "code": "002031", "group": "C", "prices": {"100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "EMBALAGEM PVC BOTÃO 05 - 22,5X14/ 100UN", "code": "002032", "group": "C", "prices": {"100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "EMBALAGEM PVC BOTÃO 06 - 35X17/ 100UN", "code": "002033", "group": "C", "prices": {"100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "EMBALAGEM PVC BOTÃO 07 - 19X21/ 100UN", "code": "002034", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMBALAGEM PVC BOTÃO 08 - 21X24/ 100UN", "code": "002035", "group": "C", "prices": {"100": 2.3, "250": 2.2, "500": 2.0, "1000": 1.8}}, {"name": "EMBALAGEM PVC BOTÃO 09 - 17X35/ 100UN", "code": "002036", "group": "C", "prices": {"100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "EMBALAGEM PVC BOTÃO 10 - 20X40/ 100UN", "code": "002037", "group": "C", "prices": {"100": 2.9, "250": 2.6, "500": 2.4, "1000": 2.2}}, {"name": "EMBALAGEM PVC BOTÃO 11 - 26X34/ 100UN", "code": "002038", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMBALAGEM PVC BOTÃO 12 - 32X37/ 100UN", "code": "002039", "group": "C", "prices": {"100": 4.4, "250": 4.1, "500": 3.7, "1000": 3.4}}, {"name": "EMBALAGEM PVC BOTÃO 13 - 40X45/ 10UN", "code": "002040", "group": "C", "prices": {"100": 7.8, "250": 7.2, "500": 6.6, "1000": 6.0}}, {"name": "EMBALAGEM PVC ZIPER N0 - 8X8CM/ 100UN", "code": "002157", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC ZIPER N1 - 10X10/ 100UN", "code": "002158", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC ZIPER N2 - 12X12/ 100UN", "code": "002159", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMBALAGEM PVC ZIPER N3 - 15X15/ 100UN", "code": "002160", "group": "C", "prices": {"100": 2.0, "250": 1.8, "500": 1.7, "1000": 1.5}}, {"name": "EMBALAGEM PVC ZIPER N4 - 18,5X15/ 100UN", "code": "002041", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMBALAGEM PVC ZIPER N5 - 19X21/ 100UN", "code": "002042", "group": "C", "prices": {"100": 3.1, "250": 2.9, "500": 2.6, "1000": 2.4}}, {"name": "EMBALAGEM PVC ZIPER N6 - 20X24/ 100UN", "code": "002043", "group": "C", "prices": {"100": 3.4, "250": 3.1, "500": 2.9, "1000": 2.6}}, {"name": "EMBALAGEM PVC ZIPER N7 - 21X25/ 100UN", "code": "002110", "group": "C", "prices": {"100": 4.9, "250": 4.6, "500": 4.2, "1000": 3.8}}, {"name": "EMBALAGEM PVC ZIPER N8 - 27X30/ 100UN", "code": "002111", "group": "C", "prices": {"100": 4.9, "250": 4.6, "500": 4.2, "1000": 3.8}}, {"name": "SACOLA PLASTICA ALÇA 30X45", "code": "", "group": "C", "prices": {"100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PLASTICA ALÇA 40X50", "code": "", "group": "C", "prices": {"100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "SACOLA PLASTICA ALÇA 45X55", "code": "", "group": "C", "prices": {"100": 3.1, "250": 2.9, "500": 2.6, "1000": 2.4}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 20X30", "code": "", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 30X40", "code": "", "group": "C", "prices": {"100": 1.3, "250": 1.2, "500": 1.1, "1000": 1.0}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 40x50", "code": "", "group": "C", "prices": {"100": 2.0, "250": 1.8, "500": 1.7, "1000": 1.5}}, {"name": "SAQUINHO CORREIO 13X25", "code": "002071", "group": "C", "prices": {"10": 1.4, "50": 0.7, "100": 0.6, "250": 0.6, "500": 0.5, "1000": 0.4}}, {"name": "SAQUINHO CORREIO 19X25", "code": "002072", "group": "C", "prices": {"10": 1.8, "50": 0.9, "100": 0.8, "250": 0.7, "500": 0.6, "1000": 0.5}}, {"name": "SAQUINHO CORREIO 20X30", "code": "002172", "group": "C", "prices": {"10": 1.4, "50": 0.7, "100": 0.6, "250": 0.6, "500": 0.5, "1000": 0.4}}, {"name": "SAQUINHO CORREIO 26X36", "code": "002078", "group": "C", "prices": {"10": 3.5, "50": 1.8, "100": 1.6, "250": 1.4, "500": 1.2, "1000": 1.0}}, {"name": "SAQUINHO CORREIO 26X36 TYF/ROSA", "code": "002179", "group": "C", "prices": {"10": 7.0, "50": 3.6, "100": 3.2, "250": 2.8, "500": 2.4, "1000": 2.0}}, {"name": "SAQUINHO CORREIO 32X40", "code": "002073", "group": "C", "prices": {"10": 4.6, "50": 2.3, "100": 2.1, "250": 1.8, "500": 1.6, "1000": 1.3}}, {"name": "SAQUINHO CORREIO 32X40 TYF/ROSA", "code": "002180", "group": "C", "prices": {"10": 9.5, "50": 4.9, "100": 4.3, "250": 3.8, "500": 3.2, "1000": 2.7}}, {"name": "SAQUINHO CORREIO 40X40", "code": "002074", "group": "C", "prices": {"10": 3.9, "50": 2.0, "100": 1.8, "250": 1.5, "500": 1.3, "1000": 1.1}}, {"name": "SAQUINHO CORREIO 40X50", "code": "002170", "group": "C", "prices": {"10": 7.7, "50": 4.0, "100": 3.5, "250": 3.1, "500": 2.6, "1000": 2.2}}, {"name": "SAQUINHO CORREIO 40X50 TYF/ROSA", "code": "002181", "group": "C", "prices": {"10": 14.0, "50": 7.2, "100": 6.4, "250": 5.6, "500": 4.8, "1000": 4.0}}, {"name": "SAQUINHO CORREIO 40X60", "code": "002175", "group": "C", "prices": {"10": 9.8, "50": 5.0, "100": 4.5, "250": 3.9, "500": 3.4, "1000": 2.8}}, {"name": "SAQUINHO CORREIO 50X60", "code": "002075", "group": "C", "prices": {"10": 10.2, "50": 5.2, "100": 4.6, "250": 4.1, "500": 3.5, "1000": 2.9}}, {"name": "SAQUINHO CORREIO 50X60 COLORIDO", "code": "002174", "group": "C", "prices": {"10": 13.0, "50": 6.7, "100": 5.9, "250": 5.2, "500": 4.4, "1000": 3.7}}, {"name": "SAQUINHO CORREIO VAZADO 32X40", "code": "002161", "group": "C", "prices": {"10": 6.0, "50": 3.1, "100": 2.7, "250": 2.4, "500": 2.0, "1000": 1.7}}];
+
+let selectedProduct = null;
+
+function fmt(v) {
+  return 'R$ ' + v.toFixed(2).replace('.', ',');
+}
+
+function getBestPrice(product, qty) {
+  const qtys = Object.keys(product.prices).map(Number).sort((a, b) => b - a);
+  for (const q of qtys) {
+    if (qty >= q) return { qty: q, price: product.prices[String(q)] };
+  }
+  // If qty is less than smallest available, use smallest
+  const minQty = Math.min(...qtys);
+  return { qty: minQty, price: product.prices[String(minQty)] };
+}
+
+function renderList(filter) {
+  const list = document.getElementById('productList');
+  const filtered = filter
+    ? PRODUCTS.filter(p => p.name.toLowerCase().includes(filter.toLowerCase()) || p.code.includes(filter))
+    : PRODUCTS;
+
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="no-results">Nenhum produto encontrado</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map((p, i) => `
+    <div class="product-item${selectedProduct && selectedProduct.code === p.code && selectedProduct.name === p.name ? ' selected' : ''}"
+         onclick="selectProduct(${PRODUCTS.indexOf(p)})">
+      <span>${p.name}</span>
+      <span class="badge ${p.group}">${p.group}</span>
+    </div>
+  `).join('');
+}
+
+function selectProduct(idx) {
+  selectedProduct = PRODUCTS[idx];
+  const el = document.getElementById('selectedProduct');
+  el.textContent = '✓ ' + selectedProduct.name;
+  el.classList.add('visible');
+
+  // Update hint
+  const qtys = Object.keys(selectedProduct.prices).map(Number).sort((a, b) => a - b);
+  document.getElementById('qtdHint').textContent = 'Faixas disponíveis: ' + qtys.join(' / ') + ' un';
+
+  renderList(document.getElementById('searchInput').value);
+  document.getElementById('errorMsg').classList.remove('visible');
+}
+
+document.getElementById('searchInput').addEventListener('input', e => {
+  renderList(e.target.value);
+});
+
+document.getElementById('personalizToggle').addEventListener('change', function() {
+  const field = document.getElementById('ladosField');
+  if (this.checked) field.classList.add('visible');
+  else field.classList.remove('visible');
+});
+
+document.getElementById('calcBtn').addEventListener('click', () => {
+  const errorEl = document.getElementById('errorMsg');
+  errorEl.classList.remove('visible');
+
+  if (!selectedProduct) {
+    errorEl.textContent = 'Selecione um produto antes de calcular.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  const qtdRaw = parseInt(document.getElementById('qtdInput').value);
+  if (!qtdRaw || qtdRaw < 1) {
+    errorEl.textContent = 'Informe uma quantidade válida.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  const personaliz = document.getElementById('personalizToggle').checked;
+  const lados = parseInt(document.getElementById('ladosInput').value) || 1;
+  const cor = document.getElementById('corInput').value.trim();
+  const telaNova = personaliz && document.getElementById('telaInput').value === 'nova';
+
+  const { price: precoUnit } = getBestPrice(selectedProduct, qtdRaw);
+  const personalizUnitario = personaliz && qtdRaw < 1000 ? 0.5 * lados : 0;
+  const precoUnitTotal = precoUnit + personalizUnitario;
+  const totalProduto = precoUnitTotal * qtdRaw;
+  const custoTela = telaNova ? 140 : 0;
+  const total = totalProduto + custoTela;
+
+  // Render result
+  document.getElementById('rProduto').textContent = selectedProduct.name;
+  document.getElementById('rQtd').textContent = qtdRaw.toLocaleString('pt-BR') + ' unidades';
+  document.getElementById('rUnitario').textContent = fmt(precoUnit);
+
+  const personalizRow = document.getElementById('rPersonalizRow');
+  if (personaliz) {
+    personalizRow.style.display = 'flex';
+    if (qtdRaw >= 1000) {
+      document.getElementById('rPersonaliz').textContent = `${lados} lado(s) — GRÁTIS (acima de 1000un)`;
+    } else {
+      document.getElementById('rPersonaliz').textContent = `${lados} lado(s) — ${fmt(personalizUnitario)}/un`;
+    }
+  } else {
+    personalizRow.style.display = 'none';
+  }
+
+  const corRow = document.getElementById('rCorRow');
+  if (cor) {
+    corRow.style.display = 'flex';
+    document.getElementById('rCor').textContent = cor;
+  } else {
+    corRow.style.display = 'none';
+  }
+
+  const telaRow = document.getElementById('rTelaRow');
+  const telaObs = document.getElementById('rTelaObs');
+  if (personaliz) {
+    telaRow.style.display = 'flex';
+    if (telaNova) {
+      document.getElementById('rTela').textContent = 'Tela nova — R$ 140,00';
+      telaObs.style.display = 'block';
+    } else {
+      document.getElementById('rTela').textContent = 'Tela existente — R$ 0,00';
+      telaObs.style.display = 'none';
+    }
+  } else {
+    telaRow.style.display = 'none';
+    telaObs.style.display = 'none';
+  }
+
+  document.getElementById('rUnitTotal').textContent = fmt(precoUnitTotal) + '/un';
+  document.getElementById('rTotal').textContent = fmt(total) + (custoTela > 0 ? ` (inclui R$ 140,00 de tela)` : '');
+
+  // WhatsApp text
+  let wtext = `*Orçamento — Dama de Ouros Embalagens*\n\n`;
+  wtext += `📦 *Produto:* ${selectedProduct.name}\n`;
+  wtext += `🔢 *Quantidade:* ${qtdRaw.toLocaleString('pt-BR')} unidades\n`;
+  if (personaliz) {
+    if (qtdRaw >= 1000) {
+      wtext += `🎨 *Personalização:* ${lados} lado(s) — GRÁTIS\n`;
+    } else {
+      wtext += `🎨 *Personalização:* ${lados} lado(s) — ${fmt(personalizUnitario)}/un\n`;
+    }
+    if (cor) wtext += `🖊️ *Cor da tinta:* ${cor}\n`;
+    if (telaNova) {
+      wtext += `🖼️ *Tela de silk:* R$ 140,00 _(cobrado apenas na 1ª compra)_\n`;
+    }
+  }
+  wtext += `💰 *Preço unitário:* ${fmt(precoUnitTotal)}\n`;
+  wtext += `✅ *Total:* ${fmt(total)}`;
+  if (custoTela > 0) wtext += ` _(inclui tela nova)_`;
+  wtext += `\n\n_Pagamento e prazo de entrega a confirmar._`;
+
+  document.getElementById('whatsappText').textContent = wtext;
+  document.getElementById('resultCard').classList.add('visible');
+  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const text = document.getElementById('whatsappText').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copiado!';
+    setTimeout(() => btn.textContent = 'Copiar texto', 2000);
+  });
+});
+
+// Init
+renderList('');
+</script>
+</body>
+</html>
