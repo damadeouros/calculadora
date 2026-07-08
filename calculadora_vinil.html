@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamento Vinil / Filme de Recorte</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --amarelo: #F5C200; --amarelo-escuro: #EF9F27; --marrom: #412402; --marrom-claro: #633806;
+      --azul: #1565C0; --azul-claro: #E3F0FF; --azul-borda: #90CAF9; --azul-escuro: #0D47A1;
+      --fundo: #F7F7F5; --card: #FFFFFF; --borda: #E4E4E0;
+      --texto: #1A1A18; --texto-sec: #6B6B65; --linha-alt: #FAFAF8;
+
+      /* Cores por tipo de vinil */
+      --comum-bg: #E8F5E9; --comum-cor: #2E7D32; --comum-borda: #A5D6A7;
+      --metal-bg: #FFF8E1; --metal-cor: #F57F17; --metal-borda: #FFE082;
+      --reflet-bg: #F3E5F5; --reflet-cor: #6A1B9A; --reflet-borda: #CE93D8;
+      --relevo-bg: #FCE4EC; --relevo-cor: #880E4F; --relevo-borda: #F48FB1;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--fundo); color: var(--texto); min-height: 100vh; }
+    header { background: var(--azul); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--azul-escuro); }
+    header h1 { font-size: 18px; font-weight: 600; color: #fff; letter-spacing: -.01em; }
+    header span { font-size: 12px; color: var(--azul-claro); font-weight: 500; }
+    .container { max-width: 1060px; margin: 0 auto; padding: 24px 20px 48px; }
+
+    /* Tabela de preços de referência */
+    .ref-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); margin-bottom: 20px; }
+    .ref-toggle { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; cursor: pointer; user-select: none; }
+    .ref-toggle span { font-size: 13px; font-weight: 600; color: var(--azul); }
+    .ref-toggle small { font-size: 11px; color: var(--texto-sec); }
+    .ref-body { display: none; padding: 0 16px 14px; }
+    .ref-body.open { display: block; }
+    .ref-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ref-table th { background: var(--azul); color: #fff; padding: 7px 10px; text-align: center; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+    .ref-table th:first-child { text-align: left; }
+    .ref-table td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--borda); }
+    .ref-table td:first-child { text-align: left; font-weight: 500; }
+    .ref-table tr:last-child td { border-bottom: none; }
+    .ref-table tr:nth-child(even) td { background: var(--linha-alt); }
+    .badge-tipo { display: inline-block; font-size: 10px; font-weight: 600; border-radius: 20px; padding: 2px 8px; }
+    .badge-comum  { background: var(--comum-bg);  color: var(--comum-cor);  border: 1px solid var(--comum-borda);  }
+    .badge-metal  { background: var(--metal-bg);  color: var(--metal-cor);  border: 1px solid var(--metal-borda);  }
+    .badge-reflet { background: var(--reflet-bg); color: var(--reflet-cor); border: 1px solid var(--reflet-borda); }
+    .badge-relevo { background: var(--relevo-bg); color: var(--relevo-cor); border: 1px solid var(--relevo-borda); }
+
+    /* Cliente */
+    .cliente-row { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 20px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label { font-size: 11px; font-weight: 500; color: var(--texto-sec); text-transform: uppercase; letter-spacing: .06em; }
+    .field-group input[type="text"] { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: var(--texto); border: 1.5px solid var(--borda); border-radius: 8px; padding: 9px 14px; width: 240px; background: var(--card); outline: none; transition: border-color .15s; }
+    .field-group input[type="text"]:focus { border-color: var(--azul); }
+
+    /* layout de duas colunas */
+    .main-cols { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+
+    /* Tabela */
+    .table-wrap { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 10px 8px; text-align: center; border-right: 1px solid transparent; }
+    thead th:last-child { border-right: none; }
+    thead th.left { text-align: left; }
+
+    .vinil-head th { background: var(--azul); color: #fff; border-bottom: 2px solid var(--azul-escuro); border-right-color: var(--azul-escuro); }
+    .vinil-sub  th { background: var(--azul-claro); color: var(--azul-escuro); font-size: 10px; padding: 4px 8px; font-weight: 500; border-bottom: 1px solid var(--azul-borda); }
+
+    tbody tr { border-bottom: 1px solid var(--borda); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) td { background: var(--linha-alt); }
+    tbody tr:hover td { background: #EEF4FF; }
+    tbody td { padding: 7px 8px; font-size: 13px; text-align: center; color: var(--texto); border-right: 1px solid var(--borda); }
+    tbody td:last-child { border-right: none; }
+    tbody td.td-projeto { text-align: left; }
+    tbody td.calc { background: #F2F2EE; color: var(--texto-sec); font-size: 12px; }
+    tbody tr:hover td.calc { background: #EAEAE4; }
+    tbody td.valor-linha { font-weight: 600; background: var(--azul-claro); color: var(--azul); }
+    tbody tr:hover td.valor-linha { background: #BBDEFB; }
+
+    input.cel { font-family: 'Inter', sans-serif; width: 100%; border: none; background: transparent; font-size: 13px; color: var(--texto); text-align: center; outline: none; padding: 2px 0; }
+    input.cel.left { text-align: left; }
+    input.cel::placeholder { color: #C0BFB8; }
+    input.cel:focus { background: #EEF4FF; border-radius: 4px; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    select.cel-select {
+      font-family: 'Inter', sans-serif; width: 100%; border: none; background: transparent;
+      font-size: 11px; color: var(--texto); outline: none; padding: 2px 2px; cursor: pointer;
+      border-radius: 4px; font-weight: 500;
+    }
+    select.cel-select:focus { background: #EEF4FF; }
+    select.cel-select option { font-size: 13px; }
+
+    /* Colorir a célula do select conforme tipo */
+    td.tipo-comum  select { color: var(--comum-cor); }
+    td.tipo-metal  select { color: var(--metal-cor); }
+    td.tipo-reflet select { color: var(--reflet-cor); }
+    td.tipo-relevo select { color: var(--relevo-cor); }
+    td.tipo-comum  { background: var(--comum-bg) !important; }
+    td.tipo-metal  { background: var(--metal-bg) !important; }
+    td.tipo-reflet { background: var(--reflet-bg) !important; }
+    td.tipo-relevo { background: var(--relevo-bg) !important; }
+
+    tfoot td { padding: 9px 8px; font-size: 13px; text-align: center; border-right: 1px solid var(--borda); }
+    tfoot td:last-child { border-right: none; }
+    tfoot td.tl { text-align: right; color: var(--texto-sec); font-size: 12px; }
+    tfoot td.tv { font-weight: 600; }
+    .vinil-foot td { border-top: 2px solid var(--azul-borda); background: var(--azul-claro); color: var(--azul-escuro); }
+
+    .btn-add { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; background: var(--card); border-radius: 8px; padding: 8px 16px; cursor: pointer; margin-top: 12px; transition: background .15s; display: inline-flex; align-items: center; gap: 6px; color: var(--azul); border: 1.5px solid var(--azul-borda); }
+    .btn-add:hover { background: var(--azul-claro); }
+
+    .legenda { font-size: 11px; color: var(--texto-sec); margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .legenda span { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .dot-calc  { background: #E4E4DE; }
+    .dot-valor { background: var(--azul-claro); border: 1px solid var(--azul-borda); }
+
+    /* Coluna direita */
+    .right-col { display: flex; flex-direction: column; gap: 14px; }
+    .total-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    .total-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--borda); font-size: 13px; }
+    .total-item .ti-label { color: var(--texto-sec); }
+    .total-item .ti-value { font-weight: 500; color: var(--texto); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .total-item.valor-final { border-bottom: none; padding: 13px 16px; }
+    .total-item.valor-final .ti-label { font-size: 14px; font-weight: 600; }
+    .total-item.valor-final .ti-value { font-size: 22px; font-weight: 600; }
+    .valor-vinil { background: var(--azul); }
+    .valor-vinil .ti-label, .valor-vinil .ti-value { color: #fff; }
+
+    /* Resumo por tipo */
+    .resumo-tipos { padding: 10px 16px 14px; border-top: 1px solid var(--borda); }
+    .resumo-label { font-size: 11px; font-weight: 600; color: var(--texto-sec); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .resumo-linha { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 12px; }
+    .resumo-linha .rl-nome { display: flex; align-items: center; gap: 6px; }
+    .resumo-linha .rl-val { font-weight: 600; color: var(--texto); }
+
+    /* Preview WhatsApp */
+    .preview-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    .preview-header { background: #075E54; padding: 10px 14px; display: flex; align-items: center; }
+    .preview-header span { color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .preview-body { background: #ECE5DD; padding: 12px; min-height: 80px; max-height: 380px; overflow-y: auto; }
+    .preview-empty { color: #999; font-size: 12px; text-align: center; padding: 18px 0; font-style: italic; }
+    .wpp-bubble { background: #fff; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.6; color: #111; white-space: pre-wrap; box-shadow: 0 1px 2px rgba(0,0,0,.1); word-break: break-word; }
+    .wpp-bubble b { font-weight: 600; }
+    .btn-wpp { font-family: 'Inter', sans-serif; width: 100%; font-size: 13px; font-weight: 600; color: #fff; background: #25D366; border: none; border-radius: 0 0 12px 12px; padding: 11px 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s; }
+    .btn-wpp:hover { background: #1ebe5d; }
+    .btn-wpp.copiado { background: #085041; }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1A1A18; color: #fff; font-size: 13px; font-weight: 500; padding: 10px 20px; border-radius: 8px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 720px) {
+      header { padding: 14px 16px; }
+      .container { padding: 16px 12px 40px; }
+      .main-cols { grid-template-columns: 1fr; }
+      .field-group input[type="text"] { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>✂️ Calculadora de Orçamento — Vinil / Filme de Recorte</h1>
+  <span>Aplicação a ferro ou prensa · Largura útil: 40 cm</span>
+</header>
+
+<div class="container">
+
+  <!-- Tabela de referência -->
+  <div class="ref-card">
+    <div class="ref-toggle" onclick="toggleRef()">
+      <span>📋 Tabela de preços de referência</span>
+      <small id="ref-hint">clique para expandir ▾</small>
+    </div>
+    <div class="ref-body" id="ref-body">
+      <table class="ref-table">
+        <thead>
+          <tr>
+            <th>Tamanho</th>
+            <th>Larg × Comp</th>
+            <th><span class="badge-tipo badge-comum">Comum</span></th>
+            <th><span class="badge-tipo badge-metal">Metálico/Neon</span></th>
+            <th><span class="badge-tipo badge-reflet">Refletivo</span></th>
+            <th><span class="badge-tipo badge-relevo">Alto Relevo</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>A4</td><td>400 × 210 mm</td><td>R$ 40,00</td><td>R$ 50,00</td><td>R$ 110,00</td><td>R$ 80,00</td></tr>
+          <tr><td>A3</td><td>400 × 420 mm</td><td>R$ 70,00</td><td>R$ 85,00</td><td>R$ 190,00</td><td>R$ 130,00</td></tr>
+          <tr><td>Metro</td><td>400 × 1000 mm</td><td>R$ 120,00</td><td>R$ 160,00</td><td>R$ 360,00</td><td>R$ 260,00</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Cliente -->
+  <div class="cliente-row">
+    <div class="field-group">
+      <label>Cliente</label>
+      <input type="text" id="cliente" placeholder="Nome do cliente" oninput="recalc()">
+    </div>
+  </div>
+
+  <div class="main-cols">
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr class="vinil-head">
+              <th class="left" style="width:18%">Projeto</th>
+              <th style="width:12%">Tipo de Vinil</th>
+              <th style="width:10%">Cor</th>
+              <th style="width:10%">Larg (mm)</th>
+              <th style="width:10%">Comp (mm)</th>
+              <th style="width:8%">A4</th>
+              <th style="width:8%">A3</th>
+              <th style="width:8%">Metro</th>
+              <th style="width:8%">Metragem</th>
+              <th style="width:8%">Qtde</th>
+              <th style="width:10%">Vl. Unit.</th>
+              <th style="width:10%">Valor Total</th>
+              <th style="width:4%"></th>
+            </tr>
+            <tr class="vinil-sub">
+              <th></th>
+              <th>selecione o tipo</th>
+              <th>ex: ouro, azul</th>
+              <th></th><th></th>
+              <th>40×21cm</th>
+              <th>40×42cm</th>
+              <th>40×100cm</th>
+              <th>metros usados</th>
+              <th></th>
+              <th>por unidade</th>
+              <th>estimado</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-vinil" class="vinil-body"></tbody>
+          <tfoot>
+            <tr class="vinil-foot">
+              <td colspan="8" class="tl">Total</td>
+              <td class="tv" id="tot-metros">—</td>
+              <td class="tv" id="tot-qty">—</td>
+              <td class="tv" id="tot-valor">—</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="legenda">
+        <span><span class="dot dot-calc"></span> Valor unitário calculado automaticamente</span>
+        <span><span class="dot dot-valor"></span> Valor total estimado por projeto</span>
+      </div>
+      <button class="btn-add" onclick="addRow()">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        Adicionar projeto
+      </button>
+    </div>
+
+    <div class="right-col">
+      <div class="total-card">
+        <div class="total-item">
+          <span class="ti-label">Total de itens</span>
+          <span class="ti-value" id="sum-qty">—</span>
+        </div>
+        <div class="resumo-tipos" id="resumo-tipos" style="display:none">
+          <div class="resumo-label">Por tipo de vinil</div>
+          <div id="resumo-linhas"></div>
+        </div>
+        <div class="total-item valor-final valor-vinil">
+          <span class="ti-label">Valor Total</span>
+          <span class="ti-value" id="valor-total">—</span>
+        </div>
+      </div>
+
+      <div class="preview-card">
+        <div class="preview-header">
+          <span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.845L.057 23.43a.75.75 0 0 0 .918.919l5.652-1.48A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.716 9.716 0 0 1-4.964-1.365l-.355-.212-3.685.965.982-3.592-.232-.369A9.718 9.718 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+            Preview do WhatsApp
+          </span>
+        </div>
+        <div class="preview-body">
+          <div id="preview-vinil"><div class="preview-empty">Preencha os projetos para ver o preview</div></div>
+        </div>
+        <button class="btn-wpp" id="btn-wpp" onclick="copiarWhatsApp()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          Copiar para WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✓ Orçamento copiado!</div>
+
+<script>
+  // Largura útil do rolo (mm)
+  const LARG_UTIL = 400;
+  const MARG = 5;
+
+  // Tabela de preços: [A4, A3, Metro]
+  const PRECOS = {
+    comum:  { label: 'Comum',          emoji: '🟢', a4: 40,  a3: 70,  metro: 120 },
+    metal:  { label: 'Metálico/Neon',  emoji: '✨', a4: 50,  a3: 85,  metro: 160 },
+    reflet: { label: 'Refletivo',      emoji: '🔆', a4: 110, a3: 190, metro: 360 },
+    relevo: { label: 'Alto Relevo',    emoji: '🔵', a4: 80,  a3: 130, metro: 260 },
+  };
+
+  // Alturas de referência (mm) para cada "folha"
+  const FAIXAS = [
+    { key: 'a4',    maxH: 210,  label: 'A4 (40×21cm)'  },
+    { key: 'a3',    maxH: 420,  label: 'A3 (40×42cm)'  },
+    { key: 'metro', maxH: 1000, label: 'Metro (40×100cm)' },
+  ];
+
+  function cols(w)        { return w > 0 ? Math.floor((LARG_UTIL + MARG) / (w + MARG)) : 0; }
+  function lins(altMM, h) { return h > 0 ? Math.max(0, Math.floor((altMM + MARG) / (h + MARG))) : 0; }
+  function fmtR(v)        { return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
+  function fmtM(v)        { return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  // Dado w e h, retorna a faixa mais barata em que cabe a peça (A4, A3 ou Metro)
+  function calcFaixaOtima(w, h, tipo) {
+    if (!w || !h || !tipo || !PRECOS[tipo]) return null;
+    const c = cols(w);
+    if (c <= 0) return null;
+
+    for (const f of FAIXAS) {
+      const l = lins(f.maxH, h);
+      if (l > 0) {
+        return { faixaKey: f.key, faixaLabel: f.label, porFolha: c * l };
+      }
+    }
+    return null; // não cabe nem num metro — improvável com largura correta
+  }
+
+  // Calcula valor de uma linha
+  // Lógica baseada em QUANTIDADE:
+  //   - Toda a qty cabe em 1 A4?    → cobra 1 A4 fixo
+  //   - Toda a qty cabe em 1 A3?    → cobra 1 A3 fixo
+  //   - Toda a qty cabe em 1 Metro? → cobra 1 Metro fixo
+  //   - Passou de 1 metro?           → cobra metros proporcionais × preço/m
+  function calcValorLinha(w, h, qty, tipo) {
+    if (!w || !h || !qty || !tipo || !PRECOS[tipo]) return null;
+    const c = cols(w);
+    if (c <= 0) return null;
+
+    const p = PRECOS[tipo];
+
+    const porA4 = c * lins(210,  h);   // peças que cabem em 1 A4
+    const porA3 = c * lins(420,  h);   // peças que cabem em 1 A3
+    const porMt = c * lins(1000, h);   // peças que cabem em 1 metro
+
+    // --- Caso 1: tudo cabe em 1 A4 ---
+    if (porA4 > 0 && qty <= porA4) {
+      return {
+        modo:       'a4',
+        faixaLabel: 'A4 (40×21cm)',
+        porFolha:   porA4,
+        folhasNec:  1,
+        metrosNec:  null,
+        precoUnit:  p.a4,
+        valor:      p.a4,
+        detalhe:    `1 folha A4 × ${fmtR(p.a4)}`,
+      };
+    }
+
+    // --- Caso 2: tudo cabe em 1 A3 ---
+    if (porA3 > 0 && qty <= porA3) {
+      return {
+        modo:       'a3',
+        faixaLabel: 'A3 (40×42cm)',
+        porFolha:   porA3,
+        folhasNec:  1,
+        metrosNec:  null,
+        precoUnit:  p.a3,
+        valor:      p.a3,
+        detalhe:    `1 folha A3 × ${fmtR(p.a3)}`,
+      };
+    }
+
+    // --- Caso 3: tudo cabe em 1 metro ---
+    if (porMt > 0 && qty <= porMt) {
+      return {
+        modo:       'metro1',
+        faixaLabel: 'Metro (40×100cm)',
+        porFolha:   porMt,
+        folhasNec:  1,
+        metrosNec:  1,
+        precoUnit:  p.metro,
+        valor:      p.metro,
+        detalhe:    `1 metro × ${fmtR(p.metro)}`,
+      };
+    }
+
+    // --- Caso 4: precisa de mais de 1 metro → proporcional ---
+    if (porMt > 0) {
+      const metrosNec  = (Math.ceil(qty / c) * (h + MARG) - MARG) / 1000;
+      const metrosCobr = Math.ceil(metrosNec * 100) / 100;
+      const valor      = metrosCobr * p.metro;
+      return {
+        modo:       'metroProp',
+        faixaLabel: `Metro corrido (${fmtM(metrosCobr)}m)`,
+        porFolha:   porMt,
+        folhasNec:  null,
+        metrosNec,
+        metrosCobr,
+        precoUnit:  p.metro,
+        valor,
+        detalhe:    `${fmtM(metrosCobr)}m × ${fmtR(p.metro)}/m`,
+      };
+    }
+
+    return null;
+  }
+
+  let rowCount = 0;
+  let dados    = {};
+  let textoWpp = '';
+
+  function addRow(w, h, nome, qty, tipo) {
+    rowCount++;
+    const id = 'r' + rowCount;
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + id;
+
+    tr.innerHTML = `
+      <td class="td-projeto">
+        <input class="cel left" placeholder="nome do projeto" value="${nome||''}" oninput="recalc()">
+      </td>
+      <td class="td-tipo" id="td-tipo-${id}">
+        <select class="cel-select" id="tipo-${id}" onchange="onTipoChange('${id}')">
+          <option value="">— selecione —</option>
+          <option value="comum"  ${tipo==='comum' ?'selected':''}>🟢 Comum</option>
+          <option value="metal"  ${tipo==='metal' ?'selected':''}>✨ Metálico/Neon</option>
+          <option value="reflet" ${tipo==='reflet'?'selected':''}>🔆 Refletivo</option>
+          <option value="relevo" ${tipo==='relevo'?'selected':''}>🔵 Alto Relevo</option>
+        </select>
+      </td>
+      <td><input class="cel left" placeholder="cor..." id="cor-${id}" oninput="recalc()"></td>
+      <td><input class="cel" type="number" min="1" max="400" placeholder="—" value="${w||''}" id="w-${id}" oninput="recalc()"></td>
+      <td><input class="cel" type="number" min="1" placeholder="—" value="${h||''}" id="h-${id}" oninput="recalc()"></td>
+      <td class="calc" id="a4-${id}">—</td>
+      <td class="calc" id="a3-${id}">—</td>
+      <td class="calc" id="mt-${id}">—</td>
+      <td class="calc" id="mtr-${id}">—</td>
+      <td><input class="cel" type="number" min="1" placeholder="0" value="${qty||''}" id="q-${id}" oninput="recalc()"></td>
+      <td class="calc" id="vu-${id}">—</td>
+      <td class="valor-linha" id="vl-${id}">—</td>
+      <td><button onclick="delRow('${id}')" title="Remover" style="background:none;border:none;cursor:pointer;color:#C0BFB8;font-size:15px;padding:2px 4px;border-radius:4px" onmouseover="this.style.color='#D94040'" onmouseout="this.style.color='#C0BFB8'">✕</button></td>
+    `;
+
+    document.getElementById('tbody-vinil').appendChild(tr);
+
+    // Aplica cor inicial se tipo já selecionado
+    if (tipo) aplicarCorTipo(id, tipo);
+    recalc();
+  }
+
+  function onTipoChange(id) {
+    const tipo = document.getElementById('tipo-' + id).value;
+    aplicarCorTipo(id, tipo);
+    recalc();
+  }
+
+  function aplicarCorTipo(id, tipo) {
+    const td = document.getElementById('td-tipo-' + id);
+    td.className = 'td-tipo' + (tipo ? ' tipo-' + tipo : '');
+  }
+
+  function delRow(id) {
+    const row = document.getElementById('row-' + id);
+    if (row) row.remove();
+    delete dados[id];
+    recalc();
+  }
+
+  function recalc() {
+    dados = {};
+    let totalQty = 0, totalValor = 0, totalMetros = 0;
+    const porTipo = {};
+
+    const tbody = document.getElementById('tbody-vinil');
+    tbody.querySelectorAll('tr').forEach(row => {
+      const id   = row.id.replace('row-', '');
+      const nome = row.querySelector('input.left').value.trim();
+      const tipo = document.getElementById('tipo-' + id)?.value || '';
+      const w    = parseFloat(document.getElementById('w-' + id)?.value) || 0;
+      const h    = parseFloat(document.getElementById('h-' + id)?.value) || 0;
+      const qty  = parseInt(document.getElementById('q-' + id)?.value)  || 0;
+      const cor  = document.getElementById('cor-' + id)?.value.trim() || '';
+
+      // Rendimento por faixa
+      const cc = cols(w);
+      const porA4 = (w && h) ? cc * lins(210,  h) : 0;
+      const porA3 = (w && h) ? cc * lins(420,  h) : 0;
+      const porMt = (w && h) ? cc * lins(1000, h) : 0;
+      document.getElementById('a4-' + id).textContent = porA4 > 0 ? porA4 : '—';
+      document.getElementById('a3-' + id).textContent = porA3 > 0 ? porA3 : '—';
+      document.getElementById('mt-' + id).textContent = porMt > 0 ? porMt : '—';
+
+      // Metragem da linha (independente de qty/tipo)
+      // A4 = 0,21m | A3 = 0,42m | Metro = metros reais usados
+      let metrosLinha = null;
+      if (w && h && qty) {
+        const cLin = cols(w);
+        if (cLin > 0) {
+          // Quantas linhas (rows) de peças são necessárias para a qty
+          const linhasNec = Math.ceil(qty / cLin);
+          // Comprimento total em mm com margem entre peças
+          const compTotalMm = linhasNec * (h + MARG) - MARG;
+          metrosLinha = compTotalMm / 1000;
+        }
+      }
+      document.getElementById('mtr-' + id).textContent = metrosLinha !== null ? fmtM(metrosLinha) + 'm' : '—';
+
+      // Valor da linha
+      const calc = (w && h && qty && tipo) ? calcValorLinha(w, h, qty, tipo) : null;
+
+      if (calc) {
+        const vlUnit = calc.valor / qty;
+        document.getElementById('vu-' + id).textContent = fmtR(vlUnit);
+        document.getElementById('vl-' + id).textContent = fmtR(calc.valor);
+        totalQty   += qty;
+        totalValor += calc.valor;
+        if (metrosLinha !== null) totalMetros += metrosLinha;
+
+        if (!porTipo[tipo]) porTipo[tipo] = 0;
+        porTipo[tipo] += calc.valor;
+
+        dados[id] = { nome, tipo, cor, w, h, qty, calc, metrosLinha };
+      } else {
+        document.getElementById('vu-' + id).textContent = '—';
+        document.getElementById('vl-' + id).textContent = tipo && w && h && qty ? '?' : '—';
+        document.getElementById('a4-' + id).textContent = porA4 > 0 ? porA4 : '—';
+        document.getElementById('a3-' + id).textContent = porA3 > 0 ? porA3 : '—';
+        document.getElementById('mt-' + id).textContent = porMt > 0 ? porMt : '—';
+      }
+    });
+
+    // Totais
+    document.getElementById('tot-metros').textContent = totalMetros > 0 ? fmtM(totalMetros) + 'm' : '—';
+    document.getElementById('tot-qty').textContent   = totalQty   > 0 ? totalQty   : '—';
+    document.getElementById('tot-valor').textContent = totalValor > 0 ? fmtR(totalValor) : '—';
+    document.getElementById('sum-qty').textContent   = totalQty   > 0 ? totalQty + ' unid.' : '—';
+    document.getElementById('valor-total').textContent = totalValor > 0 ? fmtR(totalValor) : '—';
+
+    // Resumo por tipo
+    const resumoEl = document.getElementById('resumo-tipos');
+    const linhasEl = document.getElementById('resumo-linhas');
+    const tiposUsados = Object.entries(porTipo);
+    if (tiposUsados.length > 0) {
+      resumoEl.style.display = '';
+      linhasEl.innerHTML = tiposUsados.map(([t, v]) => {
+        const p = PRECOS[t];
+        return `<div class="resumo-linha">
+          <span class="rl-nome"><span class="badge-tipo badge-${t}">${p.label}</span></span>
+          <span class="rl-val">${fmtR(v)}</span>
+        </div>`;
+      }).join('');
+    } else {
+      resumoEl.style.display = 'none';
+    }
+
+    // Preview WhatsApp
+    atualizarPreview(totalQty, totalValor, porTipo);
+  }
+
+  function gerarTexto(totalQty, totalValor, porTipo) {
+    const linhas = Object.values(dados).filter(d => d.calc);
+    if (linhas.length === 0) return '';
+
+    const cliente = document.getElementById('cliente').value.trim();
+    let txt = `*Orçamento Vinil / Filme de Recorte*\n`;
+    if (cliente) txt += `Cliente: ${cliente}\n`;
+    txt += `\n`;
+
+    linhas.forEach((d, idx) => {
+      const p = PRECOS[d.tipo];
+      const vlUnit = d.calc.valor / d.qty;
+      txt += `*${idx+1}. ${d.nome || 'Projeto ' + (idx+1)}*\n`;
+      txt += `   Tipo: ${p.label}${d.cor ? ' — ' + d.cor : ''}\n`;
+      txt += `   Medida: ${d.w}×${d.h}mm\n`;
+      txt += `   Quantidade: ${d.qty} unidade${d.qty>1?'s':''}\n`;
+      txt += `   Valor unitário: ${fmtR(vlUnit)}\n`;
+      txt += `   *Total: ${fmtR(d.calc.valor)}*\n\n`;
+    });
+
+    txt += `─────────────────\n`;
+
+    const tiposUsados = Object.entries(porTipo);
+    if (tiposUsados.length > 1) {
+      tiposUsados.forEach(([t, v]) => {
+        txt += `${PRECOS[t].label}: ${fmtR(v)}\n`;
+      });
+      txt += `\n`;
+    }
+
+    txt += `Total: ${totalQty} unidade${totalQty>1?'s':''}\n`;
+    txt += `*Valor total: ${fmtR(totalValor)}*`;
+    return txt;
+  }
+
+  function renderBubble(txt) {
+    return txt
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*(.*?)\*/g,'<b>$1</b>');
+  }
+
+  function atualizarPreview(totalQty, totalValor, porTipo) {
+    const pc = document.getElementById('preview-vinil');
+    textoWpp = gerarTexto(totalQty, totalValor, porTipo);
+    pc.innerHTML = textoWpp
+      ? `<div class="wpp-bubble">${renderBubble(textoWpp)}</div>`
+      : '<div class="preview-empty">Preencha os projetos para ver o preview</div>';
+  }
+
+  function copiarWhatsApp() {
+    if (!textoWpp) { alert('Preencha o orçamento antes de copiar.'); return; }
+    navigator.clipboard.writeText(textoWpp).then(() => {
+      const btn = document.getElementById('btn-wpp');
+      btn.classList.add('copiado');
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copiado!`;
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => {
+        btn.classList.remove('copiado');
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copiar para WhatsApp`;
+        toast.classList.remove('show');
+      }, 2500);
+    }).catch(() => alert('Não foi possível copiar automaticamente.'));
+  }
+
+  function toggleRef() {
+    const body = document.getElementById('ref-body');
+    const hint = document.getElementById('ref-hint');
+    const open = body.classList.toggle('open');
+    hint.textContent = open ? 'clique para recolher ▴' : 'clique para expandir ▾';
+  }
+
+  // Linhas iniciais
+  addRow(); addRow(); addRow();
+</script>
+</body>
+</html>

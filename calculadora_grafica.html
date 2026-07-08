@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora — Mini Gráfica</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F7F6F3;
+    --surface: #FFFFFF;
+    --border: #E2E0D9;
+    --border-strong: #C8C5BC;
+    --text: #1A1917;
+    --text-muted: #6B6860;
+    --text-light: #9C9A94;
+    --accent: #1A1917;
+    --accent-light: #F0EFE9;
+    --info-bg: #EEF4FF;
+    --info-text: #1E4BAD;
+    --info-border: #B8CEFB;
+    --warn-bg: #FFF8EC;
+    --warn-text: #9A5F00;
+    --best-border: #1E4BAD;
+    --green-bg: #EDFAF3;
+    --green-text: #166534;
+    --green-border: #BBF7D0;
+    --red-bg: #FEF2F2;
+    --red-text: #B91C1C;
+    --red-border: #FECACA;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container { max-width: 560px; margin: 0 auto; }
+
+  .header { margin-bottom: 2rem; }
+  .header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .header p  { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 12px;
+  }
+
+  /* Toggle */
+  .toggle-group { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 1.25rem; }
+  .toggle-btn {
+    padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg); color: var(--text-muted); font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.15s;
+  }
+  .toggle-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Form */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+  .form-group:last-child { margin-bottom: 0; }
+  label { font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  select, input[type="number"], input[type="text"], textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-size: 14px; color: var(--text);
+    background: var(--surface); outline: none; transition: border-color 0.15s; font-family: inherit;
+  }
+  select:focus, input:focus, textarea:focus { border-color: var(--border-strong); }
+  .input-wrap { position: relative; }
+  .input-wrap input { padding-right: 40px; }
+  .input-unit {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 12px; color: var(--text-light); pointer-events: none;
+  }
+
+  .btn-calc {
+    width: 100%; padding: 13px; background: var(--accent); color: #fff;
+    border: none; border-radius: var(--radius-md); font-size: 15px;
+    font-weight: 600; cursor: pointer; margin-top: 1rem; transition: opacity 0.15s;
+  }
+  .btn-calc:hover { opacity: 0.88; }
+
+  .error {
+    font-size: 13px; color: var(--red-text); background: var(--red-bg);
+    border: 1px solid var(--red-border); border-radius: var(--radius-sm);
+    padding: 10px 14px; margin-top: 12px; display: none;
+  }
+
+  /* Resultados */
+  .section-results { display: none; }
+  .section-results.show { display: block; }
+
+  .render-info {
+    font-size: 13px; color: var(--text-muted); background: var(--accent-light);
+    border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1rem; line-height: 1.6;
+  }
+
+  /* Cards de quantidade */
+  .qty-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1rem; }
+  .qty-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+    padding: 14px 12px; cursor: pointer; transition: all 0.15s; position: relative;
+    text-align: center; margin-top: 10px;
+  }
+  .qty-card:hover { border-color: var(--border-strong); }
+  .qty-card.selected { border: 2px solid var(--accent); background: var(--accent-light); }
+  .qty-card.best { border-color: var(--best-border); }
+  .qty-card.best.selected { border: 2px solid var(--accent); }
+  .badge {
+    position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; font-weight: 600; padding: 2px 9px; border-radius: 20px; white-space: nowrap;
+  }
+  .badge-best { background: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-border); }
+  .badge-min  { background: var(--warn-bg); color: var(--warn-text); }
+  .qty-label { font-size: 12px; color: var(--text-muted); margin-bottom: 4px; }
+  .qty-total { font-size: 20px; font-weight: 700; color: var(--text); }
+  .qty-unit  { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Botão adicionar */
+  .btn-add {
+    width: 100%; padding: 12px; background: var(--surface); color: var(--accent);
+    border: 2px solid var(--accent); border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+    display: none; margin-top: 4px;
+  }
+  .btn-add.show { display: block; }
+  .btn-add:hover { background: var(--accent-light); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+  /* Carrinho */
+  .carrinho-section { display: none; }
+  .carrinho-section.show { display: block; }
+
+  .carrinho-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1rem;
+  }
+  .carrinho-header {
+    background: var(--accent); color: #fff; padding: 14px 18px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .carrinho-lista { padding: 0; }
+
+  .carrinho-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); gap: 10px;
+  }
+  .carrinho-item:last-child { border-bottom: none; }
+  .item-info { flex: 1; }
+  .item-nome { font-size: 14px; font-weight: 500; color: var(--text); }
+  .item-detalhe { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .item-preco { font-size: 15px; font-weight: 700; color: var(--text); white-space: nowrap; }
+  .btn-remover {
+    background: none; border: none; cursor: pointer; color: var(--text-light);
+    font-size: 18px; line-height: 1; padding: 2px 4px; transition: color 0.15s;
+  }
+  .btn-remover:hover { color: var(--red-text); }
+
+  .carrinho-total {
+    padding: 12px 16px; background: var(--accent-light);
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border);
+  }
+  .total-label { font-size: 13px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .total-valor { font-size: 20px; font-weight: 700; color: var(--text); }
+
+  /* Orçamento final */
+  .orcamento-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+  }
+  .orcamento-header {
+    background: var(--accent); color: #fff; padding: 14px 18px;
+    font-size: 13px; font-weight: 600; letter-spacing: 0.03em;
+  }
+  .orcamento-body { padding: 1.25rem 1.25rem 1rem; }
+  .orcamento-preview {
+    font-size: 13px; line-height: 1.9; color: var(--text); white-space: pre-wrap;
+    background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 14px; min-height: 100px; margin-bottom: 14px; font-family: inherit;
+  }
+  .obs-group { margin-bottom: 12px; }
+  .obs-group textarea { resize: vertical; min-height: 72px; font-size: 13px; line-height: 1.6; }
+
+  .btn-copy {
+    width: 100%; padding: 12px; background: var(--green-bg); color: var(--green-text);
+    border: 1px solid var(--green-border); border-radius: var(--radius-md);
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-copy:hover { opacity: 0.85; }
+  .btn-copy.copied { background: #D1FAE5; color: #065F46; }
+
+  .hint { font-size: 12px; color: var(--text-light); text-align: center; margin-top: 8px; }
+
+  .badge-count {
+    background: #fff; color: var(--accent); border-radius: 20px;
+    font-size: 11px; font-weight: 700; padding: 1px 7px; margin-left: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Calculadora de orçamento</h1>
+    <p>Adesivos, tags e folders</p>
+  </div>
+
+  <!-- Calculadora -->
+  <div class="card">
+    <p class="card-title">Tipo de produto</p>
+    <div class="toggle-group">
+      <button class="toggle-btn active" onclick="setTipo('tag')">Tag / Folder</button>
+      <button class="toggle-btn" onclick="setTipo('adesivo')">Adesivo</button>
+    </div>
+
+    <div class="form-group">
+      <label>Papel</label>
+      <select id="sel-papel"></select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Largura</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-larg" placeholder="ex: 50" min="1">
+          <span class="input-unit">mm</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Altura</label>
+        <div class="input-wrap">
+          <input type="number" id="inp-alt" placeholder="ex: 70" min="1">
+          <span class="input-unit">mm</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-calc" onclick="calcular()">Calcular preço</button>
+    <div class="error" id="error-msg"></div>
+  </div>
+
+  <!-- Resultados -->
+  <div class="section-results" id="section-results">
+    <div class="render-info" id="render-info"></div>
+    <p style="font-size:13px; color:#6B6860; margin-bottom:8px; font-weight:500;">Selecione a quantidade desejada:</p>
+    <div class="qty-cards" id="qty-cards"></div>
+    <button class="btn-add" id="btn-add" onclick="adicionarAoPedido()">+ Adicionar ao pedido</button>
+  </div>
+
+  <hr class="divider" id="divider-carrinho" style="display:none">
+
+  <!-- Carrinho -->
+  <div class="carrinho-section" id="carrinho-section">
+
+    <div class="carrinho-card">
+      <div class="carrinho-header">
+        Itens do pedido
+        <span class="badge-count" id="badge-count">0</span>
+      </div>
+      <div class="carrinho-lista" id="carrinho-lista"></div>
+      <div class="carrinho-total">
+        <span class="total-label">Total do pedido</span>
+        <span class="total-valor" id="total-valor">R$ 0,00</span>
+      </div>
+    </div>
+
+    <!-- Orçamento -->
+    <div class="orcamento-card">
+      <div class="orcamento-header">Orçamento para envio</div>
+      <div class="orcamento-body">
+        <div class="obs-group">
+          <label style="display:block; margin-bottom:6px;">Observações (opcional)</label>
+          <textarea id="inp-obs" placeholder="Ex: arte inclusa, entrega em 5 dias úteis..." oninput="atualizarOrcamento()"></textarea>
+        </div>
+        <div class="orcamento-preview" id="orcamento-preview"></div>
+        <button class="btn-copy" id="btn-copy" onclick="copiar()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+          Copiar orçamento
+        </button>
+        <p class="hint">Cole diretamente no WhatsApp ✓</p>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const papeis = {
+  tag: [
+    { nome: 'TAG Couchê',        preco: 5.40, larg: 310, alt: 450, grupo: 'padrao' },
+    { nome: 'TAG Triplex',       preco: 5.40, larg: 310, alt: 450, grupo: 'padrao' },
+    { nome: 'TAG Kraft',         preco: 5.40, larg: 310, alt: 450, grupo: 'padrao' },
+    { nome: 'Folder Couchê 90g', preco: 2.40, larg: 310, alt: 450, grupo: 'padrao' },
+  ],
+  adesivo: [
+    { nome: 'Adesivo Couchê', preco: 3.80, larg: 310, alt: 450, grupo: 'couche' },
+    { nome: 'Adesivo Kraft',  preco: 5.90, larg: 300, alt: 440, grupo: 'padrao' },
+    { nome: 'Adesivo Vinil',  preco: 8.20, larg: 300, alt: 440, grupo: 'padrao' },
+  ]
+};
+
+const minimos = {
+  padrao: { 100: 60, 500: 80,  1000: 120 },
+  couche: { 100: 50, 500: 75,  1000: 100 },
+};
+
+let tipoAtual = 'tag';
+let qtdSelecionada = null;
+let dadosCalculo = null;
+let carrinho = [];
+
+function setTipo(tipo) {
+  tipoAtual = tipo;
+  document.querySelectorAll('.toggle-btn').forEach((b, i) => {
+    b.classList.toggle('active', (tipo === 'tag' && i === 0) || (tipo === 'adesivo' && i === 1));
+  });
+  atualizarSelect();
+  document.getElementById('section-results').classList.remove('show');
+  document.getElementById('error-msg').style.display = 'none';
+  document.getElementById('btn-add').classList.remove('show');
+  qtdSelecionada = null;
+  dadosCalculo = null;
+}
+
+function atualizarSelect() {
+  const sel = document.getElementById('sel-papel');
+  sel.innerHTML = '';
+  papeis[tipoAtual].forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.nome;
+    sel.appendChild(opt);
+  });
+}
+
+function rendimento(pLarg, pAlt, pLargPeca, pAltPeca) {
+  const s = 5;
+  const a = Math.floor(pLarg / (pLargPeca + s)) * Math.floor(pAlt / (pAltPeca + s));
+  const b = Math.floor(pLarg / (pAltPeca + s)) * Math.floor(pAlt / (pLargPeca + s));
+  return Math.max(a, b);
+}
+
+function calcular() {
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+  document.getElementById('section-results').classList.remove('show');
+  document.getElementById('btn-add').classList.remove('show');
+  qtdSelecionada = null;
+
+  const idx   = parseInt(document.getElementById('sel-papel').value);
+  const papel = papeis[tipoAtual][idx];
+  const larg  = parseFloat(document.getElementById('inp-larg').value);
+  const alt   = parseFloat(document.getElementById('inp-alt').value);
+
+  if (!larg || !alt || larg <= 0 || alt <= 0) {
+    errEl.textContent = 'Informe a largura e a altura da peça.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const porFolha = rendimento(papel.larg, papel.alt, larg, alt);
+  if (porFolha < 1) {
+    errEl.textContent = `A peça não cabe na folha de ${papel.larg}×${papel.alt}mm com 5mm de sangria.`;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const mins = minimos[papel.grupo];
+  const folhas1000    = Math.ceil(1000 / porFolha);
+  const bruto1000     = Math.ceil(folhas1000 * papel.preco);
+  const acimaDominimo = bruto1000 > mins[1000];
+  const total1000     = acimaDominimo ? bruto1000 : mins[1000];
+
+  let total500, total100, usouMin500, usouMin100;
+  if (acimaDominimo) {
+    const d500 = Math.ceil(total1000 * 0.70);
+    const d100 = Math.ceil(total1000 * 0.45);
+    total500   = Math.max(d500, mins[500]);
+    total100   = Math.max(d100, mins[100]);
+    usouMin500 = d500 < mins[500];
+    usouMin100 = d100 < mins[100];
+  } else {
+    total500 = mins[500]; total100 = mins[100];
+    usouMin500 = true;    usouMin100 = true;
+  }
+
+  dadosCalculo = {
+    tipo: tipoAtual, papel, larg, alt, porFolha,
+    itens: [
+      { qtd: 100,  total: total100,  usouMin: usouMin100  },
+      { qtd: 500,  total: total500,  usouMin: usouMin500  },
+      { qtd: 1000, total: total1000, usouMin: !acimaDominimo },
+    ]
+  };
+
+  document.getElementById('render-info').innerHTML =
+    `<strong>${papel.nome}</strong> &mdash; folha ${papel.larg}×${papel.alt}mm &mdash; <strong>${porFolha} peças/folha</strong> (sangria 5mm)`;
+
+  const cards = document.getElementById('qty-cards');
+  cards.innerHTML = '';
+  dadosCalculo.itens.forEach((d, i) => {
+    const isBest = i === 2;
+    cards.innerHTML += `
+      <div class="qty-card ${isBest ? 'best' : ''}" id="qcard-${d.qtd}" onclick="selecionarQtd(${d.qtd})">
+        ${isBest ? '<span class="badge badge-best">melhor valor</span>' : ''}
+        ${d.usouMin ? '<span class="badge badge-min" style="${isBest ? "top:-22px" : ""}">mínimo</span>' : ''}
+        <div class="qty-label">${d.qtd.toLocaleString('pt-BR')} unidades</div>
+        <div class="qty-total">R$ ${d.total.toFixed(2)}</div>
+        <div class="qty-unit">R$ ${(d.total / d.qtd).toFixed(2)} / un</div>
+      </div>
+    `;
+  });
+
+  document.getElementById('section-results').classList.add('show');
+}
+
+function selecionarQtd(qtd) {
+  qtdSelecionada = qtd;
+  document.querySelectorAll('.qty-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('qcard-' + qtd).classList.add('selected');
+  document.getElementById('btn-add').classList.add('show');
+}
+
+function adicionarAoPedido() {
+  if (!qtdSelecionada || !dadosCalculo) return;
+  const item = dadosCalculo.itens.find(d => d.qtd === qtdSelecionada);
+  const { papel, larg, alt, tipo } = dadosCalculo;
+
+  carrinho.push({
+    id: Date.now(),
+    tipo,
+    papel: papel.nome,
+    larg, alt,
+    qtd: qtdSelecionada,
+    total: item.total,
+  });
+
+  renderCarrinho();
+
+  // Feedback visual no botão
+  const btn = document.getElementById('btn-add');
+  btn.textContent = '✓ Adicionado!';
+  btn.style.background = 'var(--green-bg)';
+  btn.style.color = 'var(--green-text)';
+  btn.style.borderColor = 'var(--green-border)';
+  setTimeout(() => {
+    btn.textContent = '+ Adicionar ao pedido';
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 1500);
+}
+
+function removerItem(id) {
+  carrinho = carrinho.filter(c => c.id !== id);
+  renderCarrinho();
+}
+
+function renderCarrinho() {
+  const section = document.getElementById('carrinho-section');
+  const divider = document.getElementById('divider-carrinho');
+
+  if (carrinho.length === 0) {
+    section.classList.remove('show');
+    divider.style.display = 'none';
+    return;
+  }
+
+  section.classList.add('show');
+  divider.style.display = 'block';
+
+  document.getElementById('badge-count').textContent = carrinho.length;
+
+  const lista = document.getElementById('carrinho-lista');
+  lista.innerHTML = '';
+  let totalGeral = 0;
+
+  carrinho.forEach(item => {
+    totalGeral += item.total;
+    const tipoLabel = item.tipo === 'tag' ? 'Tag/Folder' : 'Adesivo';
+    lista.innerHTML += `
+      <div class="carrinho-item">
+        <div class="item-info">
+          <div class="item-nome">${item.papel}</div>
+          <div class="item-detalhe">${tipoLabel} · ${item.larg}×${item.alt}mm · ${item.qtd.toLocaleString('pt-BR')} un</div>
+        </div>
+        <div class="item-preco">R$ ${item.total.toFixed(2)}</div>
+        <button class="btn-remover" onclick="removerItem(${item.id})" title="Remover">×</button>
+      </div>
+    `;
+  });
+
+  document.getElementById('total-valor').textContent =
+    'R$ ' + totalGeral.toFixed(2).replace('.', ',');
+
+  atualizarOrcamento();
+}
+
+function atualizarOrcamento() {
+  if (carrinho.length === 0) return;
+  const obs = document.getElementById('inp-obs').value.trim();
+  const totalGeral = carrinho.reduce((s, c) => s + c.total, 0);
+
+  const agora = new Date();
+  const data = agora.toLocaleDateString('pt-BR');
+  let texto = `*ORÇAMENTO - ${data}*\n`;
+  texto += `━━━━━━━━━━━━━━━━━━━\n`;
+
+  carrinho.forEach((item, i) => {
+    const tipoLabel = item.tipo === 'tag' ? 'Tag/Folder' : 'Adesivo';
+    texto += `Item ${i + 1}: ${item.papel}\n`;
+    texto += `   Tamanho: ${item.larg}×${item.alt}mm\n`;
+    texto += `   Quantidade: ${item.qtd.toLocaleString('pt-BR')} unidades\n`;
+    texto += `   Total: R$ ${item.total.toFixed(2)}\n`;
+    if (i < carrinho.length - 1) texto += `\n`;
+  });
+
+  texto += `━━━━━━━━━━━━━━━━━━━\n`;
+  texto += `*Total geral: R$ ${totalGeral.toFixed(2)}*\n`;
+
+  if (obs) {
+    texto += `━━━━━━━━━━━━━━━━━━━\n`;
+    texto += `Obs: ${obs}\n`;
+  }
+
+  document.getElementById('orcamento-preview').textContent = texto;
+}
+
+function copiar() {
+  const texto = document.getElementById('orcamento-preview').textContent;
+  if (!texto) return;
+  navigator.clipboard.writeText(texto).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Copiado!`;
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg> Copiar orçamento`;
+    }, 2500);
+  });
+}
+
+atualizarSelect();
+</script>
+</body>
+</html>
