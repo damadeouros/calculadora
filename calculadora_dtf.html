@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamento DTF</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --amarelo: #F5C200; --amarelo-escuro: #EF9F27; --marrom: #412402; --marrom-claro: #633806;
+      --verde: #1D9E75; --verde-escuro: #085041; --verde-claro: #E1F5EE;
+      --roxo: #6B3FA0; --roxo-claro: #EDE6F7; --roxo-borda: #B39DDB;
+      --fundo: #F7F7F5; --card: #FFFFFF; --borda: #E4E4E0;
+      --texto: #1A1A18; --texto-sec: #6B6B65; --linha-alt: #FAFAF8;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--fundo); color: var(--texto); min-height: 100vh; }
+    header { background: var(--amarelo); padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid var(--amarelo-escuro); }
+    header h1 { font-size: 18px; font-weight: 600; color: var(--marrom); letter-spacing: -.01em; }
+    header span { font-size: 12px; color: var(--marrom-claro); font-weight: 500; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px 20px 48px; }
+
+    /* Cliente */
+    .cliente-row { display: flex; align-items: flex-end; gap: 16px; margin-bottom: 20px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label { font-size: 11px; font-weight: 500; color: var(--texto-sec); text-transform: uppercase; letter-spacing: .06em; }
+    .field-group input[type="text"] { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 500; color: var(--texto); border: 1.5px solid var(--borda); border-radius: 8px; padding: 9px 14px; width: 240px; background: var(--card); outline: none; transition: border-color .15s; }
+    .field-group input[type="text"]:focus { border-color: var(--amarelo); }
+
+    /* Abas de produto */
+    .tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+    .tab-btn { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; padding: 8px 18px; border-radius: 8px; border: 1.5px solid var(--borda); background: var(--card); color: var(--texto-sec); cursor: pointer; transition: all .15s; }
+    .tab-btn.active-textil { background: #FFF9E0; color: var(--marrom); border-color: var(--amarelo-escuro); }
+    .tab-btn.active-uv     { background: var(--roxo-claro); color: var(--roxo); border-color: var(--roxo-borda); }
+    .tab-btn:not(.active-textil):not(.active-uv):hover { background: var(--linha-alt); }
+
+    /* painel de produto */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* layout de duas colunas */
+    .main-cols { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+
+    /* Tabela */
+    .table-wrap { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    table { width: 100%; border-collapse: collapse; }
+    thead th { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; padding: 10px 10px; text-align: center; border-right: 1px solid transparent; }
+    thead th:last-child { border-right: none; }
+    thead th.left { text-align: left; }
+
+    .textil-head th { background: var(--amarelo); color: var(--marrom); border-bottom: 2px solid var(--amarelo-escuro); border-right-color: var(--amarelo-escuro); }
+    .textil-sub  th { background: #FFF3CC; color: var(--marrom-claro); font-size: 10px; padding: 4px 10px; font-weight: 500; border-bottom: 1px solid var(--amarelo-escuro); }
+    .uv-head     th { background: var(--roxo); color: #fff; border-bottom: 2px solid var(--roxo-borda); border-right-color: var(--roxo-borda); }
+    .uv-sub      th { background: var(--roxo-claro); color: var(--roxo); font-size: 10px; padding: 4px 10px; font-weight: 500; border-bottom: 1px solid var(--roxo-borda); }
+
+    tbody tr { border-bottom: 1px solid var(--borda); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:nth-child(even) td { background: var(--linha-alt); }
+    tbody tr:hover td { background: #FFF9E6; }
+    tbody td { padding: 7px 10px; font-size: 13px; text-align: center; color: var(--texto); border-right: 1px solid var(--borda); }
+    tbody td:last-child { border-right: none; }
+    tbody td.td-projeto { text-align: left; }
+    tbody td.calc { background: #F2F2EE; color: var(--texto-sec); }
+    tbody tr:hover td.calc { background: #EAEAE4; }
+    tbody td.metros { font-weight: 600; }
+    .textil-body td.metros { background: #FFF9E0; color: var(--marrom-claro); }
+    .textil-body tr:hover td.metros { background: #FFF3C0; }
+    .uv-body td.metros { background: var(--roxo-claro); color: var(--roxo); }
+    .uv-body tr:hover td.metros { background: #DDD0F5; }
+
+    input.cel { font-family: 'Inter', sans-serif; width: 100%; border: none; background: transparent; font-size: 13px; color: var(--texto); text-align: center; outline: none; padding: 2px 0; }
+    input.cel.left { text-align: left; }
+    input.cel::placeholder { color: #C0BFB8; }
+    input.cel:focus { background: #FFF9E0; border-radius: 4px; }
+    input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
+    input[type=number] { -moz-appearance: textfield; }
+
+    tfoot td { padding: 9px 10px; font-size: 13px; text-align: center; border-right: 1px solid var(--borda); }
+    tfoot td:last-child { border-right: none; }
+    tfoot td.tl { text-align: right; color: var(--texto-sec); font-size: 12px; }
+    tfoot td.tv { font-weight: 600; }
+    .textil-foot td { border-top: 2px solid var(--amarelo); background: #FFF9E0; color: var(--marrom); }
+    .uv-foot     td { border-top: 2px solid var(--roxo-borda); background: var(--roxo-claro); color: var(--roxo); }
+
+    .btn-add { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; background: var(--card); border-radius: 8px; padding: 8px 16px; cursor: pointer; margin-top: 12px; transition: background .15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-add-textil { color: var(--marrom-claro); border: 1.5px solid var(--amarelo-escuro); }
+    .btn-add-textil:hover { background: #FFF9E0; }
+    .btn-add-uv { color: var(--roxo); border: 1.5px solid var(--roxo-borda); }
+    .btn-add-uv:hover { background: var(--roxo-claro); }
+
+    .legenda { font-size: 11px; color: var(--texto-sec); margin-top: 8px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .legenda span { display: flex; align-items: center; gap: 4px; }
+    .dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+    .dot-calc { background: #E4E4DE; }
+    .dot-metros-textil { background: #FFF3CC; border: 1px solid var(--amarelo-escuro); }
+    .dot-metros-uv     { background: var(--roxo-claro); border: 1px solid var(--roxo-borda); }
+
+    /* Coluna direita */
+    .right-col { display: flex; flex-direction: column; gap: 14px; }
+    .total-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    .total-item { display: flex; justify-content: space-between; align-items: center; padding: 11px 16px; border-bottom: 1px solid var(--borda); font-size: 13px; }
+    .total-item .ti-label { color: var(--texto-sec); }
+    .total-item .ti-value { font-weight: 500; color: var(--texto); display: flex; align-items: center; gap: 6px; }
+    .badge-faixa { font-size: 10px; border-radius: 20px; padding: 2px 8px; font-weight: 500; }
+    .badge-textil { background: #FFF3CC; color: var(--marrom-claro); border: 1px solid var(--amarelo-escuro); }
+    .badge-uv     { background: var(--roxo-claro); color: var(--roxo); border: 1px solid var(--roxo-borda); }
+    .total-item.valor-final { border-bottom: none; padding: 13px 16px; }
+    .total-item.valor-final .ti-label { font-size: 14px; font-weight: 600; }
+    .total-item.valor-final .ti-value { font-size: 22px; font-weight: 600; }
+    .valor-textil { background: var(--amarelo); }
+    .valor-textil .ti-label, .valor-textil .ti-value { color: var(--marrom); }
+    .valor-uv { background: var(--roxo); }
+    .valor-uv .ti-label, .valor-uv .ti-value { color: #fff; }
+
+    /* Preview WhatsApp */
+    .preview-card { background: var(--card); border: 1px solid var(--borda); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.04); }
+    .preview-header { background: #075E54; padding: 10px 14px; display: flex; align-items: center; }
+    .preview-header span { color: #fff; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+    .preview-body { background: #ECE5DD; padding: 12px; min-height: 80px; max-height: 340px; overflow-y: auto; }
+    .preview-empty { color: #999; font-size: 12px; text-align: center; padding: 18px 0; font-style: italic; }
+    .wpp-bubble { background: #fff; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.6; color: #111; white-space: pre-wrap; box-shadow: 0 1px 2px rgba(0,0,0,.1); word-break: break-word; }
+    .wpp-bubble b { font-weight: 600; }
+    .wpp-bubble i { font-style: italic; color: #555; }
+    .btn-wpp { font-family: 'Inter', sans-serif; width: 100%; font-size: 13px; font-weight: 600; color: #fff; background: #25D366; border: none; border-radius: 0 0 12px 12px; padding: 11px 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background .15s; }
+    .btn-wpp:hover { background: #1ebe5d; }
+    .btn-wpp.copiado { background: var(--verde-escuro); }
+
+    .toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1A1A18; color: #fff; font-size: 13px; font-weight: 500; padding: 10px 20px; border-radius: 8px; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 700px) {
+      header { padding: 14px 16px; }
+      .container { padding: 16px 12px 40px; }
+      .main-cols { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Calculadora de Orçamento — DTF</h1>
+  <span>Área útil: 27,5 cm · Margem entre artes: 5 mm</span>
+</header>
+
+<div class="container">
+
+  <div class="cliente-row">
+    <div class="field-group">
+      <label>Cliente</label>
+      <input type="text" id="cliente" placeholder="Nome do cliente" oninput="recalcAtivo()">
+    </div>
+  </div>
+
+  <!-- Abas -->
+  <div class="tabs">
+    <button class="tab-btn active-textil" id="tab-textil" onclick="switchTab('textil')">🧵 DTF Têxtil</button>
+    <button class="tab-btn" id="tab-uv" onclick="switchTab('uv')">💎 DTF UV Rígido</button>
+  </div>
+
+  <!-- PAINEL TÊXTIL -->
+  <div class="tab-panel active" id="panel-textil">
+    <div class="main-cols">
+      <div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr class="textil-head">
+                <th class="left" style="width:20%">Projeto</th>
+                <th style="width:11%">Larg (mm)</th>
+                <th style="width:11%">Comp (mm)</th>
+                <th style="width:9%">A4</th>
+                <th style="width:9%">A3</th>
+                <th style="width:9%">Metro</th>
+                <th style="width:10%">Qtde</th>
+                <th style="width:13%">Metros</th>
+                <th style="width:4%"></th>
+              </tr>
+              <tr class="textil-sub">
+                <th></th><th></th><th></th>
+                <th>R$26</th><th>R$44</th><th>R$71/m</th>
+                <th></th><th>necessários</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-textil" class="textil-body"></tbody>
+            <tfoot>
+              <tr class="textil-foot">
+                <td colspan="6" class="tl">Total</td>
+                <td class="tv" id="tot-qty-textil">—</td>
+                <td class="tv" id="tot-m-textil">—</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="legenda">
+          <span><span class="dot dot-calc"></span> Calculado automaticamente</span>
+          <span><span class="dot dot-metros-textil"></span> Metros necessários</span>
+        </div>
+        <button class="btn-add btn-add-textil" onclick="addRow('textil')">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Adicionar projeto
+        </button>
+      </div>
+      <div class="right-col" id="right-textil">
+        <div class="total-card">
+          <div class="total-item">
+            <span class="ti-label">Total metros</span>
+            <span class="ti-value" id="sum-m-textil">—</span>
+          </div>
+          <div class="total-item">
+            <span class="ti-label">Faixa</span>
+            <span class="ti-value">
+              <span id="preco-m-textil">—</span>
+              <span class="badge-faixa badge-textil" id="faixa-label-textil">—</span>
+            </span>
+          </div>
+          <div class="total-item valor-final valor-textil">
+            <span class="ti-label">Valor Total</span>
+            <span class="ti-value" id="valor-total-textil">—</span>
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-header">
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.845L.057 23.43a.75.75 0 0 0 .918.919l5.652-1.48A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.716 9.716 0 0 1-4.964-1.365l-.355-.212-3.685.965.982-3.592-.232-.369A9.718 9.718 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+              Preview do WhatsApp
+            </span>
+          </div>
+          <div class="preview-body">
+            <div id="preview-textil"><div class="preview-empty">Preencha os projetos para ver o preview</div></div>
+          </div>
+          <button class="btn-wpp" id="btn-wpp-textil" onclick="copiarWhatsApp('textil')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copiar para WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL UV -->
+  <div class="tab-panel" id="panel-uv">
+    <div class="main-cols">
+      <div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr class="uv-head">
+                <th class="left" style="width:20%">Projeto</th>
+                <th style="width:11%">Larg (mm)</th>
+                <th style="width:11%">Comp (mm)</th>
+                <th style="width:9%">A4</th>
+                <th style="width:9%">A3</th>
+                <th style="width:9%">Metro</th>
+                <th style="width:10%">Qtde</th>
+                <th style="width:13%">Metros</th>
+                <th style="width:4%"></th>
+              </tr>
+              <tr class="uv-sub">
+                <th></th><th></th><th></th>
+                <th>R$60</th><th>R$95</th><th>R$220/m</th>
+                <th></th><th>necessários</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="tbody-uv" class="uv-body"></tbody>
+            <tfoot>
+              <tr class="uv-foot">
+                <td colspan="6" class="tl">Total</td>
+                <td class="tv" id="tot-qty-uv">—</td>
+                <td class="tv" id="tot-m-uv">—</td>
+                <td></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="legenda">
+          <span><span class="dot dot-calc"></span> Calculado automaticamente</span>
+          <span><span class="dot dot-metros-uv"></span> Metros necessários</span>
+        </div>
+        <button class="btn-add btn-add-uv" onclick="addRow('uv')">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Adicionar projeto
+        </button>
+      </div>
+      <div class="right-col" id="right-uv">
+        <div class="total-card">
+          <div class="total-item">
+            <span class="ti-label">Total metros</span>
+            <span class="ti-value" id="sum-m-uv">—</span>
+          </div>
+          <div class="total-item">
+            <span class="ti-label">Faixa</span>
+            <span class="ti-value">
+              <span id="preco-m-uv">—</span>
+              <span class="badge-faixa badge-uv" id="faixa-label-uv">—</span>
+            </span>
+          </div>
+          <div class="total-item valor-final valor-uv">
+            <span class="ti-label">Valor Total</span>
+            <span class="ti-value" id="valor-total-uv">—</span>
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="preview-header">
+            <span>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.554 4.118 1.528 5.845L.057 23.43a.75.75 0 0 0 .918.919l5.652-1.48A11.945 11.945 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.716 9.716 0 0 1-4.964-1.365l-.355-.212-3.685.965.982-3.592-.232-.369A9.718 9.718 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/></svg>
+              Preview do WhatsApp
+            </span>
+          </div>
+          <div class="preview-body">
+            <div id="preview-uv"><div class="preview-empty">Preencha os projetos para ver o preview</div></div>
+          </div>
+          <button class="btn-wpp" id="btn-wpp-uv" onclick="copiarWhatsApp('uv')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            Copiar para WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✓ Orçamento copiado!</div>
+
+<script>
+  const LARG_UTIL = 275, MARG = 5;
+
+  const PRODUTOS = {
+    textil: {
+      nome: 'DTF Têxtil', emoji: '🧵',
+      precoA4: 26, precoA3: 44,
+      faixas: [
+        { de:0,  ate:1,    label:'mín. 1m',        preco:71,  minM:1    },
+        { de:1,  ate:3,    label:'até 3m',          preco:71,  minM:null },
+        { de:3,  ate:6,    label:'a partir de 3m',  preco:62,  minM:null },
+        { de:6,  ate:10,   label:'a partir de 6m',  preco:53,  minM:null },
+        { de:10, ate:15,   label:'a partir de 10m', preco:44,  minM:null },
+        { de:15, ate:9999, label:'a partir de 15m', preco:35,  minM:null },
+      ]
+    },
+    uv: {
+      nome: 'DTF UV Rígido', emoji: '💎',
+      precoA4: 60, precoA3: 95,
+      faixas: [
+        { de:0,  ate:1,    label:'mín. 1m',        preco:220, minM:1    },
+        { de:1,  ate:3,    label:'até 3m',          preco:220, minM:null },
+        { de:3,  ate:6,    label:'a partir de 3m',  preco:210, minM:null },
+        { de:6,  ate:10,   label:'a partir de 6m',  preco:200, minM:null },
+        { de:10, ate:15,   label:'a partir de 10m', preco:190, minM:null },
+        { de:15, ate:9999, label:'a partir de 15m', preco:180, minM:null },
+      ]
+    }
+  };
+
+  function calcTotal(tipo, totalM) {
+    const prod = PRODUTOS[tipo];
+    if (totalM <= 0) return null;
+    if (totalM <= 0.21) return { faixaLabel:'A4 (até 21cm)', detalhe:`R$${prod.precoA4},00/folha`, valor: prod.precoA4 };
+    if (totalM <= 0.42) return { faixaLabel:'A3 (até 42cm)', detalhe:`R$${prod.precoA3},00/folha`, valor: prod.precoA3 };
+    const f   = prod.faixas.find(x => totalM >= x.de && totalM < x.ate) || prod.faixas[prod.faixas.length-1];
+    const mCob = f.minM ? f.minM : totalM;
+    return { faixaLabel: f.label, detalhe:`R$${f.preco},00/m`, valor: mCob * f.preco };
+  }
+
+  function cols(w) { return w > 0 ? Math.floor((LARG_UTIL + MARG) / (w + MARG)) : 0; }
+  function lins(altMM, h) { return h > 0 ? Math.max(0, Math.floor((altMM + MARG) / (h + MARG))) : 0; }
+  function fmtM(v) { return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function fmtR(v) { return v.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
+
+  const state = { textil: { rowCount:0, dados:{}, texto:'' }, uv: { rowCount:0, dados:{}, texto:'' } };
+  let abaAtiva = 'textil';
+
+  function switchTab(tipo) {
+    abaAtiva = tipo;
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tipo).classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(b => b.className = 'tab-btn');
+    document.getElementById('tab-' + tipo).classList.add('tab-btn', 'active-' + tipo);
+  }
+
+  function recalcAtivo() { recalc(abaAtiva); }
+
+  function addRow(tipo, w, h, nome, qty) {
+    const s = state[tipo];
+    s.rowCount++;
+    const id = tipo + '-' + s.rowCount;
+    const tr = document.createElement('tr');
+    tr.id = 'row-' + id;
+    tr.innerHTML = `
+      <td class="td-projeto"><input class="cel left" placeholder="nome do projeto" value="${nome||''}" oninput="recalc('${tipo}')"></td>
+      <td><input class="cel" type="number" min="1" max="275" placeholder="—" value="${w||''}" id="w-${id}" oninput="recalc('${tipo}')"></td>
+      <td><input class="cel" type="number" min="1" placeholder="—" value="${h||''}" id="h-${id}" oninput="recalc('${tipo}')"></td>
+      <td class="calc" id="a4-${id}">—</td>
+      <td class="calc" id="a3-${id}">—</td>
+      <td class="calc" id="mt-${id}">—</td>
+      <td><input class="cel" type="number" min="1" placeholder="0" value="${qty||''}" id="q-${id}" oninput="recalc('${tipo}')"></td>
+      <td class="metros" id="qm-${id}">—</td>
+      <td class="calc" id="ori-${id}" style="font-size:11px;color:var(--texto-sec)">—</td>
+      <td><button onclick="delRow('${tipo}','${id}')" title="Remover" style="background:none;border:none;cursor:pointer;color:#C0BFB8;font-size:15px;padding:2px 4px;border-radius:4px" onmouseover="this.style.color='#D94040'" onmouseout="this.style.color='#C0BFB8'">✕</button></td>
+    `;
+    document.getElementById('tbody-' + tipo).appendChild(tr);
+    recalc(tipo);
+  }
+
+  function delRow(tipo, id) {
+    const row = document.getElementById('row-' + id);
+    if (row) row.remove();
+    delete state[tipo].dados[id];
+    recalc(tipo);
+  }
+
+  function recalc(tipo) {
+    const s = state[tipo];
+    let totalQty = 0, totalM = 0;
+    s.dados = {};
+
+    // percorre todas as linhas existentes no tbody
+    const tbody = document.getElementById('tbody-' + tipo);
+    const rows  = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const id   = row.id.replace('row-', '');
+      const nome = row.querySelector('input.left').value.trim();
+      const artW = parseFloat(document.getElementById('w-'+id)?.value) || 0;
+      const artH = parseFloat(document.getElementById('h-'+id)?.value) || 0;
+      const qty  = parseInt(document.getElementById('q-'+id)?.value)  || 0;
+      // Testa orientação normal e girada, usa a de melhor rendimento (menos metros)
+      function rendimento(w, h) {
+        if (w <= 0 || h <= 0) return { porA4:0, porA3:0, por1m:0, metros:0 };
+        const c = cols(w);
+        const porA4 = h <= 210 ? c * lins(210, h) : 0;
+        const porA3 = h <= 420 ? c * lins(420, h) : 0;
+        const por1m = c * lins(1000, h);
+        let metros = 0;
+        if (qty > 0 && c > 0) metros = (Math.ceil(qty / c) * (h + MARG) - MARG) / 1000;
+        return { porA4, porA3, por1m, metros };
+      }
+
+      const rNormal  = rendimento(artW, artH);
+      const rGirada  = rendimento(artH, artW);
+
+      // Melhor = menos metros (ou mais por1m como desempate)
+      let r, orientacao;
+      if (artW === artH || !artW || !artH) {
+        r = rNormal; orientacao = '';
+      } else if (rNormal.metros <= rGirada.metros && rNormal.metros > 0) {
+        r = rNormal; orientacao = '';
+      } else if (rGirada.metros > 0) {
+        r = rGirada; orientacao = '↻ girada';
+      } else {
+        r = rNormal; orientacao = '';
+      }
+
+      const { porA4, porA3, por1m, metros } = r;
+
+      document.getElementById('a4-'+id).textContent  = porA4 > 0 ? porA4 : '—';
+      document.getElementById('a3-'+id).textContent  = porA3 > 0 ? porA3 : '—';
+      document.getElementById('mt-'+id).textContent  = por1m > 0 ? por1m : '—';
+      document.getElementById('ori-'+id).textContent = orientacao;
+
+      document.getElementById('qm-'+id).textContent = metros > 0 ? fmtM(metros) : '—';
+      if (artW && artH && qty) s.dados[id] = { nome, artW, artH, qty, porA4, porA3, por1m, metros, orientacao };
+      totalQty += qty;
+      totalM   += metros;
+    });
+
+    document.getElementById('tot-qty-'+tipo).textContent = totalQty > 0 ? totalQty : '—';
+    document.getElementById('tot-m-'+tipo).textContent   = totalM > 0 ? fmtM(totalM) : '—';
+    document.getElementById('sum-m-'+tipo).textContent   = totalM > 0 ? fmtM(totalM) + ' m' : '—';
+
+    let valorTxt = '—', faixaLabel = '—', detalhe = '—';
+    const ct = calcTotal(tipo, totalM);
+    if (ct) {
+      valorTxt   = fmtR(ct.valor);
+      faixaLabel = ct.faixaLabel;
+      detalhe    = ct.detalhe;
+    }
+    document.getElementById('faixa-label-'+tipo).textContent = faixaLabel;
+    document.getElementById('preco-m-'+tipo).textContent     = detalhe;
+    document.getElementById('valor-total-'+tipo).textContent = valorTxt;
+
+    atualizarPreview(tipo, totalM, valorTxt, faixaLabel, detalhe);
+  }
+
+  function gerarTexto(tipo, totalM, valorTxt, faixaLabel, detalhe) {
+    const s      = state[tipo];
+    const cliente = document.getElementById('cliente').value.trim();
+    const prod    = PRODUTOS[tipo];
+    const linhas  = Object.values(s.dados).filter(d => d.metros > 0);
+    if (linhas.length === 0) return '';
+
+    let txt = `*Orçamento ${prod.nome}*\n`;
+    if (cliente) txt += `Cliente: ${cliente}\n`;
+    txt += `\n`;
+
+    linhas.forEach((d, idx) => {
+      txt += `*${d.nome || 'Projeto ' + (idx+1)}*\n`;
+      txt += `Medida: ${d.artW}×${d.artH}mm | Quantidade: ${d.qty} un. | ${fmtM(d.metros)}m\n`;
+    });
+
+    txt += `\n─────────────────\n`;
+    txt += `Total: ${fmtM(totalM)}m`;
+    if (faixaLabel !== '—') txt += ` (${faixaLabel})`;
+    txt += `\n*Valor total: ${valorTxt}*`;
+    return txt;
+  }
+
+  function renderBubble(txt) {
+    return txt
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*(.*?)\*/g,'<b>$1</b>')
+      .replace(/_(.*?)_/g,'<i>$1</i>');
+  }
+
+  function atualizarPreview(tipo, totalM, valorTxt, faixaLabel, detalhe) {
+    const s  = state[tipo];
+    const pc = document.getElementById('preview-' + tipo);
+    s.texto  = gerarTexto(tipo, totalM, valorTxt, faixaLabel, detalhe);
+    pc.innerHTML = s.texto
+      ? `<div class="wpp-bubble">${renderBubble(s.texto)}</div>`
+      : '<div class="preview-empty">Preencha os projetos para ver o preview</div>';
+  }
+
+  function copiarWhatsApp(tipo) {
+    const txt = state[tipo].texto;
+    if (!txt) { alert('Preencha o orçamento antes de copiar.'); return; }
+    navigator.clipboard.writeText(txt).then(() => {
+      const btn = document.getElementById('btn-wpp-' + tipo);
+      btn.classList.add('copiado');
+      btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Copiado!`;
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => {
+        btn.classList.remove('copiado');
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg> Copiar para WhatsApp`;
+        toast.classList.remove('show');
+      }, 2500);
+    }).catch(() => alert('Não foi possível copiar automaticamente.'));
+  }
+
+  // Linhas iniciais
+  addRow('textil'); addRow('textil'); addRow('textil');
+  addRow('uv');     addRow('uv');     addRow('uv');
+</script>
+</body>
+</html>
