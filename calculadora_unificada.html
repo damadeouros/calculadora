@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dama de Ouros — Orçamentos</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ouro:#F5C200; --ouro-esc:#EF9F27; --marrom:#412402; --marrom-cl:#633806;
+  --fundo:#F7F6F2; --card:#FFFFFF; --borda:#E4E2DC; --linha-alt:#FAFAF7;
+  --texto:#1A1A18; --texto-sec:#6B6B65;
+  --verde:#25D366; --verde-esc:#1ebe5d;
+  --roxo:#6B3FA0; --roxo-cl:#EDE6F7; --roxo-borda:#B39DDB;
+  --vermelho:#C43D3D; --verde-ok:#1D9E75;
+}
+body{font-family:'Inter',sans-serif;background:var(--fundo);color:var(--texto);min-height:100vh;padding-bottom:60px}
+
+header{background:var(--ouro);border-bottom:3px solid var(--ouro-esc);padding:16px 20px;display:flex;align-items:center;gap:12px}
+.logo-d{font-size:26px;color:var(--marrom);line-height:1}
+header h1{font-size:17px;font-weight:700;color:var(--marrom);letter-spacing:-.01em}
+header p{font-size:12px;color:var(--marrom-cl);font-weight:500}
+
+.container{max-width:860px;margin:0 auto;padding:18px 14px 40px}
+
+.card{background:var(--card);border:1px solid var(--borda);border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--marrom-cl);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title::before{content:'♦';color:var(--ouro-esc);font-size:11px}
+
+.fields-row{display:flex;gap:12px;flex-wrap:wrap}
+.field-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:140px}
+.field-group label{font-size:11px;font-weight:500;color:var(--texto-sec);text-transform:uppercase;letter-spacing:.05em}
+.field-group input[type=text],.field-group input[type=number],.field-group select{
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--texto);
+  border:1.5px solid var(--borda);border-radius:8px;padding:9px 12px;background:var(--card);outline:none;width:100%;transition:border-color .15s}
+.field-group input:focus,.field-group select:focus{border-color:var(--ouro)}
+.hint{font-size:11px;color:var(--texto-sec)}
+
+/* Abas */
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab-btn{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;
+  border:1.5px solid var(--borda);background:var(--card);color:var(--texto-sec);cursor:pointer;transition:all .15s;flex:1;min-width:110px}
+.tab-btn.active{background:var(--marrom);color:var(--ouro);border-color:var(--marrom)}
+.tab-btn.active::before{content:'♦ '}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Segmentado (sub-tipos) */
+.seg{display:inline-flex;border:1.5px solid var(--borda);border-radius:9px;overflow:hidden;margin-bottom:12px}
+.seg button{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border:none;background:var(--card);color:var(--texto-sec);cursor:pointer}
+.seg button.active{background:var(--ouro);color:var(--marrom)}
+
+/* Lista de produtos (embalagens) */
+.search-wrap{position:relative;margin-bottom:8px}
+.search-wrap input{width:100%;font-family:'Inter',sans-serif;font-size:14px;border:1.5px solid var(--borda);border-radius:8px;padding:10px 12px 10px 34px;outline:none}
+.search-wrap input:focus{border-color:var(--ouro)}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.5}
+.product-list{max-height:210px;overflow-y:auto;border:1px solid var(--borda);border-radius:8px}
+.product-item{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--borda)}
+.product-item:last-child{border-bottom:none}
+.product-item:hover{background:#FFF9E0}
+.product-item.selected{background:#FFF3C0;font-weight:600}
+.selected-chip{display:none;margin-top:8px;font-size:13px;font-weight:600;color:var(--verde-ok);background:#E1F5EE;border:1px solid #B3E4D2;border-radius:8px;padding:8px 12px}
+.selected-chip.visible{display:block}
+.no-results{padding:14px;font-size:13px;color:var(--texto-sec);text-align:center}
+
+.toggle-row{display:flex;align-items:center;gap:10px;margin:12px 0 4px;cursor:pointer;user-select:none}
+.toggle-row input{width:18px;height:18px;accent-color:var(--ouro-esc);cursor:pointer}
+.toggle-row span{font-size:14px;font-weight:500}
+.silk-fields{display:none;margin-top:10px}
+.silk-fields.visible{display:flex}
+
+.error-msg{display:none;font-size:13px;color:var(--vermelho);background:#FDEBEB;border:1px solid #F3C3C3;border-radius:8px;padding:9px 12px;margin-top:10px}
+.error-msg.visible{display:block}
+
+.btn{font-family:'Inter',sans-serif;font-size:14px;font-weight:600;border:none;border-radius:9px;padding:12px 18px;cursor:pointer;transition:filter .15s;width:100%;margin-top:12px}
+.btn:hover{filter:brightness(.96)}
+.btn-ouro{background:var(--ouro);color:var(--marrom)}
+.btn-outline{background:var(--card);color:var(--marrom-cl);border:1.5px solid var(--ouro-esc);width:auto;padding:8px 14px;font-size:13px}
+
+/* Cards de quantidade (gráfica) */
+.qty-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.qty-card{border:1.5px solid var(--borda);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;position:relative;transition:all .12s;background:var(--card)}
+.qty-card:hover{border-color:var(--ouro-esc)}
+.qty-card.selected{border-color:var(--marrom);background:#FFF9E0;box-shadow:0 0 0 1px var(--marrom)}
+.qty-card .q-label{font-size:12px;color:var(--texto-sec);font-weight:500}
+.qty-card .q-total{font-size:16px;font-weight:700;margin:4px 0 2px}
+.qty-card .q-unit{font-size:11px;color:var(--texto-sec)}
+.badge-min{position:absolute;top:-8px;right:6px;font-size:9px;font-weight:700;background:var(--roxo-cl);color:var(--roxo);border:1px solid var(--roxo-borda);border-radius:10px;padding:1px 7px}
+.render-info{font-size:13px;color:var(--texto-sec);background:var(--linha-alt);border:1px solid var(--borda);border-radius:8px;padding:9px 12px;margin-top:12px}
+
+/* Linhas DTF / Vinil */
+.proj-row{border:1px solid var(--borda);border-radius:10px;padding:12px;margin-bottom:8px;background:var(--linha-alt)}
+.proj-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px}
+.proj-grid-vinil{display:grid;grid-template-columns:1.6fr 1.4fr 1fr;gap:8px;margin-bottom:8px}
+.proj-grid-vinil2{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.proj-row .fg label{font-size:10px}
+.proj-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;color:var(--texto-sec)}
+.proj-foot b{color:var(--marrom-cl)}
+.del-row{background:none;border:none;color:#C0BFB8;font-size:16px;cursor:pointer;padding:2px 6px;border-radius:4px}
+.del-row:hover{color:var(--vermelho)}
+.totais-inline{display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#FFF9E0;border:1px solid var(--ouro-esc);border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13px}
+.totais-inline b{font-size:16px;color:var(--marrom)}
+
+/* Pedido unificado */
+.pedido{border:2px solid var(--marrom);border-radius:14px;overflow:hidden;margin-top:22px;background:var(--card)}
+.pedido-head{background:var(--marrom);color:var(--ouro);padding:12px 16px;font-size:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.pedido-head button{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
+.pedido-body{padding:14px 16px}
+.pedido-empty{font-size:13px;color:var(--texto-sec);text-align:center;padding:18px 0;font-style:italic}
+.ped-item{border:1px solid var(--borda);border-radius:10px;padding:11px 13px;margin-bottom:8px;background:var(--linha-alt)}
+.ped-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.ped-origem{font-size:9px;font-weight:700;letter-spacing:.06em;background:var(--ouro);color:var(--marrom);border-radius:5px;padding:2px 7px;display:inline-block;margin-bottom:4px}
+.ped-titulo{font-size:13px;font-weight:600}
+.ped-det{font-size:12px;color:var(--texto-sec);margin-top:3px;line-height:1.5}
+.ped-sub{font-size:13px;font-weight:700;color:var(--marrom-cl);margin-top:5px}
+.ped-total{display:flex;justify-content:space-between;align-items:center;border-top:2px solid var(--ouro);margin-top:10px;padding-top:10px}
+.ped-total span{font-size:13px;font-weight:600;color:var(--texto-sec)}
+.ped-total b{font-size:22px;color:var(--marrom)}
+
+.wpp-preview{background:#ECE5DD;border-radius:10px;padding:12px;margin-top:12px;max-height:320px;overflow-y:auto}
+.wpp-bubble{background:#fff;border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;color:#111;white-space:pre-wrap;box-shadow:0 1px 2px rgba(0,0,0,.1);word-break:break-word}
+.wpp-bubble b{font-weight:600}.wpp-bubble i{font-style:italic;color:#555}
+.btn-wpp{background:var(--verde);color:#fff}
+.btn-wpp:hover{background:var(--verde-esc);filter:none}
+.btn-trello{background:var(--roxo-cl);color:var(--roxo);border:1.5px solid var(--roxo-borda)}
+.hint-copy{font-size:11px;color:var(--texto-sec);text-align:center;margin-top:8px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#1A1A18;color:#fff;font-size:13px;font-weight:500;padding:10px 20px;border-radius:8px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:640px){
+  .qty-cards{grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .proj-grid{grid-template-columns:1.5fr 1fr 1fr 1fr}
+  .tabs .tab-btn{min-width:calc(50% - 6px)}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo-d">♦</span>
+  <div>
+    <h1>Dama de Ouros</h1>
+    <p>Calculadora de orçamentos — tudo em um</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- CLIENTE (compartilhado por todas as abas) -->
+  <div class="card">
+    <div class="card-title">Cliente</div>
+    <div class="fields-row">
+      <div class="field-group">
+        <label for="clienteNome">Nome</label>
+        <input type="text" id="clienteNome" placeholder="Ex: Maria — Loja Bella" oninput="renderPedido()">
+      </div>
+      <div class="field-group">
+        <label for="clienteTel">WhatsApp (opcional)</label>
+        <input type="text" id="clienteTel" placeholder="(11) 9...." oninput="renderPedido()">
+      </div>
+    </div>
+  </div>
+
+  <!-- ABAS -->
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-emb" onclick="switchTab('emb')">📦 Embalagens</button>
+    <button class="tab-btn" id="tab-gr" onclick="switchTab('gr')">🏷️ Tags & Adesivos</button>
+    <button class="tab-btn" id="tab-dtf" onclick="switchTab('dtf')">🧵 DTF</button>
+    <button class="tab-btn" id="tab-vin" onclick="switchTab('vin')">✂️ Vinil</button>
+  </div>
+
+  <!-- ===================== ABA EMBALAGENS ===================== -->
+  <div class="tab-panel active" id="panel-emb">
+    <div class="card">
+      <div class="card-title">Produto</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="embBusca" placeholder="Buscar produto ou código...">
+      </div>
+      <div class="product-list" id="embLista"></div>
+      <div class="selected-chip" id="embSelChip"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quantidade e personalização</div>
+      <div class="fields-row">
+        <div class="field-group">
+          <label for="embQtd">Quantidade</label>
+          <input type="number" id="embQtd" placeholder="Ex: 100" min="1">
+          <span class="hint" id="embQtdHint"></span>
+        </div>
+        <div class="field-group">
+          <label for="embCorProd">Cor do produto (opcional)</label>
+          <input type="text" id="embCorProd" placeholder="Ex: kraft, preto...">
+        </div>
+      </div>
+      <label class="toggle-row">
+        <input type="checkbox" id="embSilk">
+        <span>Incluir personalização (silk screen)</span>
+      </label>
+      <div class="fields-row silk-fields" id="embSilkFields">
+        <div class="field-group">
+          <label for="embLados">Lados</label>
+          <select id="embLados">
+            <option value="1">1 lado</option><option value="2">2 lados</option>
+            <option value="3">3 lados</option><option value="4">4 lados</option>
+          </select>
+          <span class="hint">R$ 0,50/lado por unidade · 1 lado grátis acima de 1000un</span>
+        </div>
+        <div class="field-group">
+          <label for="embTinta">Cor da tinta</label>
+          <input type="text" id="embTinta" placeholder="Ex: preta, branca...">
+        </div>
+        <div class="field-group">
+          <label for="embTela">Tela de silk</label>
+          <select id="embTela">
+            <option value="existente">Tela existente — R$ 0,00</option>
+            <option value="nova">Tela nova — R$ 140,00</option>
+          </select>
+        </div>
+      </div>
+      <div class="error-msg" id="embErro"></div>
+      <button class="btn btn-ouro" onclick="embAdicionar()">+ Adicionar ao pedido</button>
+    </div>
+  </div>
+
+  <!-- ===================== ABA TAGS & ADESIVOS ===================== -->
+  <div class="tab-panel" id="panel-gr">
+    <div class="card">
+      <div class="card-title">Produto</div>
+      <div class="seg">
+        <button class="active" id="grSegTag" onclick="grSetTipo('tag')">Tag / Folder</button>
+        <button id="grSegAdesivo" onclick="grSetTipo('adesivo')">Adesivo</button>
+      </div>
+      <div class="fields-row">
+        <div class="field-group">
+          <label for="grPapel">Papel</label>
+          <select id="grPapel"></select>
+        </div>
+        <div class="field-group">
+          <label for="grLarg">Largura (mm)</label>
+          <input type="number" id="grLarg" placeholder="ex: 50" min="1">
+        </div>
+        <div class="field-group">
+          <label for="grAlt">Altura (mm)</label>
+          <input type="number" id="grAlt" placeholder="ex: 70" min="1">
+        </div>
+      </div>
+      <div class="error-msg" id="grErro"></div>
+      <button class="btn btn-ouro" onclick="grCalcular()">Calcular preço</button>
+      <div id="grResultado" style="display:none">
+        <div class="render-info" id="grInfo"></div>
+        <div class="qty-cards" id="grCards"></div>
+        <button class="btn btn-ouro" id="grBtnAdd" style="display:none" onclick="grAdicionar()">+ Adicionar ao pedido</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== ABA DTF ===================== -->
+  <div class="tab-panel" id="panel-dtf">
+    <div class="card">
+      <div class="card-title">Projetos DTF</div>
+      <div class="seg">
+        <button class="active" id="dtfSegTextil" onclick="dtfSetTipo('textil')">🧵 Têxtil</button>
+        <button id="dtfSegUv" onclick="dtfSetTipo('uv')">💎 UV Rígido</button>
+      </div>
+      <div id="dtfRows"></div>
+      <button class="btn-outline btn" style="width:auto" onclick="dtfAddRow()">+ Adicionar arte</button>
+      <div class="totais-inline" id="dtfTotais" style="display:none">
+        <span>Total: <b id="dtfTotM">—</b></span>
+        <span id="dtfFaixa"></span>
+        <span style="margin-left:auto">Valor: <b id="dtfValor">—</b></span>
+      </div>
+      <div class="error-msg" id="dtfErro"></div>
+      <button class="btn btn-ouro" onclick="dtfAdicionar()">+ Adicionar DTF ao pedido</button>
+    </div>
+  </div>
+
+  <!-- ===================== ABA VINIL ===================== -->
+  <div class="tab-panel" id="panel-vin">
+    <div class="card">
+      <div class="card-title">Projetos de vinil / filme de recorte</div>
+      <div id="vinRows"></div>
+      <button class="btn-outline btn" style="width:auto" onclick="vinAddRow()">+ Adicionar arte</button>
+      <div class="error-msg" id="vinErro"></div>
+      <button class="btn btn-ouro" onclick="vinAdicionar()">+ Adicionar vinil ao pedido</button>
+    </div>
+  </div>
+
+  <!-- ===================== PEDIDO UNIFICADO ===================== -->
+  <div class="pedido">
+    <div class="pedido-head">
+      <span>🛒 Pedido</span>
+      <button onclick="limparPedido()">Limpar tudo</button>
+    </div>
+    <div class="pedido-body">
+      <div id="pedidoItens"><div class="pedido-empty">Nenhum item ainda — use as abas acima para montar o pedido</div></div>
+      <div class="ped-total" id="pedTotalRow" style="display:none">
+        <span>Total geral</span><b id="pedTotal">—</b>
+      </div>
+      <div class="wpp-preview" id="wppPreview" style="display:none">
+        <div class="wpp-bubble" id="wppBubble"></div>
+      </div>
+      <button class="btn btn-wpp" id="btnWpp" style="display:none" onclick="copiarWpp()">📱 Copiar p/ WhatsApp (cliente)</button>
+      <button class="btn btn-trello" id="btnTrello" style="display:none" onclick="copiarTrello()">📋 Copiar p/ Trello (produção)</button>
+      <p class="hint-copy" id="hintCopy" style="display:none">WhatsApp = com preço · Trello = especificação p/ produção</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">✓ Copiado!</div>
+
+<script>
+/* ================================================================
+   ⚙️⚙️⚙️  TABELAS DE PREÇOS — EDITE AQUI  ⚙️⚙️⚙️
+   ================================================================
+   Este bloco concentra TODOS os preços das 4 calculadoras.
+   Para atualizar: abra este arquivo no Bloco de Notas (ou peça
+   pro Claude), mude os números e salve. Nada mais precisa mudar.
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   1) EMBALAGENS  (aba 📦)
+   Cada produto: { name, code, group, prices }
+   - prices = { "faixa mínima": preço unitário }
+     Ex: {"100": 2.1, "500": 1.8} → de 100 a 499un paga 2,10;
+     a partir de 500un paga 1,80.
+   - Para ADICIONAR um produto: copie uma linha inteira { ... },
+     cole antes do ]; final e ajuste nome/código/preços.
+   - Para MUDAR um preço: ache o produto (Ctrl+F pelo nome) e
+     troque o número da faixa.
+---------------------------------------------------------------- */
+const PRODUTOS_EMBALAGENS = [{"name": "CX. PAP. CORREIO - 18X12X6", "code": "002152", "group": "A", "prices": {"1": 2.6, "10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "CX. PAP. CORREIO - 25X17X9", "code": "002112", "group": "A", "prices": {"1": 5.4, "10": 5.1, "50": 4.8, "100": 4.4, "250": 4.1, "500": 3.7, "1000": 3.4}}, {"name": "CX. PAP. CORREIO - 30X20X11", "code": "002061", "group": "A", "prices": {"1": 8.2, "10": 7.7, "50": 7.1, "100": 6.6, "250": 6.1, "500": 5.6, "1000": 5.1}}, {"name": "CX. PAP. CORREIO - 34X28X15", "code": "002059", "group": "A", "prices": {"1": 12.8, "10": 12.0, "50": 11.2, "100": 10.4, "250": 9.6, "500": 8.8, "1000": 8.0}}, {"name": "CX. PAP. CORREIO - 35X25X10", "code": "002060", "group": "A", "prices": {"1": 9.4, "10": 8.9, "50": 8.3, "100": 7.7, "250": 7.1, "500": 6.5, "1000": 5.9}}, {"name": "CX. PAP. CORREIO - 35X27X6", "code": "002163", "group": "A", "prices": {"1": 6.9, "10": 6.5, "50": 6.0, "100": 5.6, "250": 5.2, "500": 4.7, "1000": 4.3}}, {"name": "CX. PAP. MALETA - 30X21X18", "code": "002064", "group": "A", "prices": {"1": 8.2, "10": 7.7, "50": 7.1, "100": 6.6, "250": 6.1, "500": 5.6, "1000": 5.1}}, {"name": "CX. PAP. MALETA - 35X8X16", "code": "002062", "group": "A", "prices": {"1": 5.0, "10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "CX. PAP. MALETA - 43X30X30", "code": "002153", "group": "A", "prices": {"1": 11.2, "10": 10.5, "50": 9.8, "100": 9.1, "250": 8.4, "500": 7.7, "1000": 7.0}}, {"name": "CX. PAP. MALETA - 50X40X35", "code": "002076", "group": "A", "prices": {"1": 16.0, "10": 15.0, "50": 14.0, "100": 13.0, "250": 12.0, "500": 11.0, "1000": 10.0}}, {"name": "CX. PAP. MALETA - 54X49X47", "code": "002077", "group": "A", "prices": {"1": 25.0, "10": 23.4, "50": 21.8, "100": 20.3, "250": 18.7, "500": 17.2, "1000": 15.6}}, {"name": "SACOLA LAMINADA 33X25X15", "code": "004036", "group": "A", "prices": {"1": 15.0, "10": 14.1, "50": 13.2, "100": 12.2, "250": 11.3, "500": 10.3, "1000": 9.4}}, {"name": "SACOLA LAMINADA 39X33X15", "code": "004037", "group": "A", "prices": {"1": 19.0, "10": 17.9, "50": 16.7, "100": 15.5, "250": 14.3, "500": 13.1, "1000": 11.9}}, {"name": "SACOLA NAT. ALÇA COLORIDA 16x19x5", "code": "", "group": "A", "prices": {"1": 8.0, "10": 7.5, "50": 7.0, "100": 6.5, "250": 6.0, "500": 5.5, "1000": 5.0}}, {"name": "SACOLA NAT. ALÇA COLORIDA 21x22x14", "code": "", "group": "A", "prices": {"1": 14.0, "10": 12.3, "50": 11.5, "100": 10.7, "250": 9.8, "500": 9.0, "1000": 8.2}}, {"name": "SACOLA NAT. ALÇA COLORIDA 25x28x15", "code": "", "group": "A", "prices": {"1": 16.0, "10": 15.0, "50": 14.0, "100": 13.0, "250": 12.0, "500": 11.0, "1000": 10.0}}, {"name": "ENVELOPE KRAFT E-COMMERCE 20X25X5", "code": "002086", "group": "A", "prices": {"1": 5.0, "10": 4.1, "50": 3.8, "100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "ENVELOPE KRAFT E-COMMERCE 25X35X5", "code": "002176", "group": "A", "prices": {"1": 5.0, "10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "ENVELOPE KRAFT REFORÇADO 25X37CM", "code": "002171", "group": "A", "prices": {"1": 6.0, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SAQUINHO DE ALGODÃO 10X12", "code": "002120", "group": "A", "prices": {"1": 3.0, "10": 2.6, "50": 2.4, "100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "SAQUINHO DE ALGODÃO 12X15", "code": "002121", "group": "A", "prices": {"1": 4.0, "10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SAQUINHO DE ALGODÃO 15X20", "code": "002122", "group": "A", "prices": {"1": 4.0, "10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "SAQUINHO DE ALGODÃO 18X22", "code": "002123", "group": "A", "prices": {"1": 6.0, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SAQUINHO DE ALGODÃO 20X30", "code": "002119", "group": "A", "prices": {"1": 7.0, "10": 6.0, "50": 5.6, "100": 5.2, "250": 4.8, "500": 4.4, "1000": 4.0}}, {"name": "SAQUINHO DE ALGODÃO 20X35", "code": "002124", "group": "A", "prices": {"1": 8.0, "10": 7.1, "50": 6.6, "100": 6.1, "250": 5.6, "500": 5.2, "1000": 4.7}}, {"name": "SAQUINHO DE ALGODÃO 25X35", "code": "002125", "group": "A", "prices": {"1": 10.0, "10": 9.2, "50": 8.5, "100": 7.9, "250": 7.3, "500": 6.7, "1000": 6.1}}, {"name": "SAQUINHO DE ALGODÃO 30X40", "code": "002126", "group": "A", "prices": {"1": 13.0, "10": 11.9, "50": 11.1, "100": 10.3, "250": 9.5, "500": 8.7, "1000": 7.9}}, {"name": "SAQUINHO DE ALGODÃO 40X60", "code": "002136", "group": "A", "prices": {"1": 18.0, "10": 16.8, "50": 15.7, "100": 14.6, "250": 13.4, "500": 12.3, "1000": 11.2}}, {"name": "SACOLA DE ALGODÃO 20X25 - PADRÃO", "code": "002150", "group": "A", "prices": {"1": 12.6, "10": 11.9, "50": 11.1, "100": 10.3, "250": 9.5, "500": 8.7, "1000": 7.9}}, {"name": "SACOLA DE ALGODÃO 35X40 - PADRÃO", "code": "002151", "group": "A", "prices": {"1": 15.4, "10": 14.4, "50": 13.4, "100": 12.5, "250": 11.5, "500": 10.6, "1000": 9.6}}, {"name": "SACOLA TNT ALÇA 38X41", "code": "004023", "group": "A", "prices": {"1": 7.5, "10": 7.1, "50": 6.6, "100": 6.1, "250": 5.6, "500": 5.2, "1000": 4.7}}, {"name": "SACOLA TNT BOCA VAZADA 35X38", "code": "004030", "group": "A", "prices": {"1": 5.1, "10": 4.8, "50": 4.5, "100": 4.2, "250": 3.8, "500": 3.5, "1000": 3.2}}, {"name": "SACOLA TRANSPARENTE ALÇA 17X23X7", "code": "004051", "group": "A", "prices": {"1": 6.2, "10": 5.9, "50": 5.5, "100": 5.1, "250": 4.7, "500": 4.3, "1000": 3.9}}, {"name": "SACOLA TRANSPARENTE ALÇA 24X34X12", "code": "004052", "group": "A", "prices": {"1": 10.9, "10": 10.2, "50": 9.5, "100": 8.8, "250": 8.2, "500": 7.5, "1000": 6.8}}, {"name": "SACOLA KRAFT 13X16X8", "code": "004002", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA KRAFT 13X8X39 (VINHO)", "code": "004024", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "SACOLA KRAFT 18X26X10", "code": "004003", "group": "B", "prices": {"10": 2.0, "50": 1.8, "100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "SACOLA KRAFT 24X34X10", "code": "004004", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA KRAFT 31X33X19", "code": "004005", "group": "B", "prices": {"10": 2.6, "50": 2.4, "100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "SACOLA KRAFT 31X41X13", "code": "004006", "group": "B", "prices": {"10": 2.7, "50": 2.5, "100": 2.3, "250": 2.2, "500": 2.0, "1000": 1.8}}, {"name": "SACOLA KRAFT 37X46X14", "code": "004008", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA KRAFT 40X33X13", "code": "004007", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA KRAFT 9X23X7", "code": "004038", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PAPEL BRANCO 13X16X8", "code": "004043", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA PAPEL BRANCO 18X26X10", "code": "004017", "group": "B", "prices": {"10": 2.1, "50": 2.0, "100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PAPEL BRANCO 24X34X11", "code": "004016", "group": "B", "prices": {"10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SACOLA PAPEL BRANCO 31X33X19", "code": "004029", "group": "B", "prices": {"10": 2.4, "50": 2.2, "100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "SACOLA PAPEL BRANCO 31X41X15", "code": "004018", "group": "B", "prices": {"10": 4.7, "50": 4.3, "100": 4.0, "250": 3.7, "500": 3.4, "1000": 3.1}}, {"name": "SACOLA PAPEL COLORIDO 18X22X9", "code": "004049", "group": "B", "prices": {"10": 3.3, "50": 3.1, "100": 2.9, "250": 2.6, "500": 2.4, "1000": 2.2}}, {"name": "SACOLA PAPEL COLORIDO 24X34X11", "code": "004048", "group": "B", "prices": {"10": 3.5, "50": 3.2, "100": 3.0, "250": 2.8, "500": 2.5, "1000": 2.3}}, {"name": "SACOLA PAPEL OFFSET 160G 14X15X8", "code": "004047", "group": "B", "prices": {"10": 5.4, "50": 5.0, "100": 4.7, "250": 4.3, "500": 4.0, "1000": 3.6}}, {"name": "SACOLA PAPEL OFFSET 160G 22X33X9", "code": "004032", "group": "B", "prices": {"10": 8.7, "50": 8.1, "100": 7.5, "250": 7.0, "500": 6.4, "1000": 5.8}}, {"name": "SACOLA PAPEL OFFSET 160G 40X27X12", "code": "004033", "group": "B", "prices": {"10": 11.6, "50": 10.8, "100": 10.0, "250": 9.2, "500": 8.5, "1000": 7.7}}, {"name": "SACOLA PAPEL OFFSET 160G 47X34X14", "code": "004034", "group": "B", "prices": {"10": 13.8, "50": 12.9, "100": 12.0, "250": 11.0, "500": 10.1, "1000": 9.2}}, {"name": "VELUDO 10X12 OURO", "code": "002139", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 10X12 PRATA", "code": "002138", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 10X12 PRETO", "code": "002137", "group": "B", "prices": {"10": 3.2, "50": 2.9, "100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "VELUDO 12X15 OURO", "code": "002142", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "VELUDO 12X15 PRATA", "code": "002141", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "VELUDO 12X15 PRETO", "code": "002140", "group": "B", "prices": {"10": 3.8, "50": 3.5, "100": 3.3, "250": 3.0, "500": 2.8, "1000": 2.5}}, {"name": "SACO JUTA 10X15CM", "code": "002177", "group": "B", "prices": {"10": 2.9, "50": 2.7, "100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "SACO ORGANZA BRANCA 10X15", "code": "002135", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA BRANCA 7X9", "code": "002134", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA PRETO 10X15", "code": "002133", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "SACO ORGANZA PRETO 7X9", "code": "002132", "group": "B", "prices": {"10": 1.1, "50": 1.0, "100": 0.9, "250": 0.8, "500": 0.8, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER BRANCO 14X18", "code": "002164", "group": "C", "prices": {"100": 0.8, "250": 0.8, "500": 0.7, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER BRANCO 15X20", "code": "002165", "group": "C", "prices": {"100": 0.9, "250": 0.9, "500": 0.8, "1000": 0.8}}, {"name": "EMB. FOSCO ZIPER BRANCO 18X25", "code": "002166", "group": "C", "prices": {"100": 1.2, "250": 1.1, "500": 1.1, "1000": 1.0}}, {"name": "EMB. FOSCO ZIPER BRANCO 20X30", "code": "002167", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.3, "1000": 1.2}}, {"name": "EMB. FOSCO ZIPER BRANCO 25X35", "code": "002168", "group": "C", "prices": {"100": 1.7, "250": 1.7, "500": 1.6, "1000": 1.5}}, {"name": "EMB. FOSCO ZIPER BRANCO 30X40", "code": "002169", "group": "C", "prices": {"100": 2.2, "250": 2.1, "500": 2.0, "1000": 1.9}}, {"name": "EMB. FOSCO ZIPER BRANCO 35X45", "code": "002173", "group": "C", "prices": {"100": 3.0, "250": 2.9, "500": 2.7, "1000": 2.6}}, {"name": "EMB. FOSCO ZIPER PRETO 14X18", "code": "002154", "group": "C", "prices": {"100": 0.8, "250": 0.8, "500": 0.7, "1000": 0.7}}, {"name": "EMB. FOSCO ZIPER PRETO 15X20", "code": "002147", "group": "C", "prices": {"100": 0.9, "250": 0.9, "500": 0.8, "1000": 0.8}}, {"name": "EMB. FOSCO ZIPER PRETO 18X25", "code": "002129", "group": "C", "prices": {"100": 1.2, "250": 1.1, "500": 1.1, "1000": 1.0}}, {"name": "EMB. FOSCO ZIPER PRETO 20X30", "code": "002148", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.3, "1000": 1.2}}, {"name": "EMB. FOSCO ZIPER PRETO 25X35", "code": "002130", "group": "C", "prices": {"100": 1.7, "250": 1.7, "500": 1.6, "1000": 1.5}}, {"name": "EMB. FOSCO ZIPER PRETO 30X40", "code": "002131", "group": "C", "prices": {"100": 2.2, "250": 2.1, "500": 2.0, "1000": 1.9}}, {"name": "EMB. FOSCO ZIPER PRETO 35X45", "code": "002162", "group": "C", "prices": {"100": 3.0, "250": 2.9, "500": 2.7, "1000": 2.6}}, {"name": "EMBALAGEM PVC BOTÃO 01 - 10X10/ 100UN", "code": "002028", "group": "C", "prices": {"100": 1.2, "250": 1.1, "500": 1.0, "1000": 0.9}}, {"name": "EMBALAGEM PVC BOTÃO 02 - 12X14/ 100UN", "code": "002029", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC BOTÃO 03 - 15X13,5/ 100UN", "code": "002030", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMBALAGEM PVC BOTÃO 04 - 18,5X15/ 100UN", "code": "002031", "group": "C", "prices": {"100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "EMBALAGEM PVC BOTÃO 05 - 22,5X14/ 100UN", "code": "002032", "group": "C", "prices": {"100": 2.2, "250": 2.0, "500": 1.9, "1000": 1.7}}, {"name": "EMBALAGEM PVC BOTÃO 06 - 35X17/ 100UN", "code": "002033", "group": "C", "prices": {"100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "EMBALAGEM PVC BOTÃO 07 - 19X21/ 100UN", "code": "002034", "group": "C", "prices": {"100": 2.1, "250": 1.9, "500": 1.8, "1000": 1.6}}, {"name": "EMBALAGEM PVC BOTÃO 08 - 21X24/ 100UN", "code": "002035", "group": "C", "prices": {"100": 2.3, "250": 2.2, "500": 2.0, "1000": 1.8}}, {"name": "EMBALAGEM PVC BOTÃO 09 - 17X35/ 100UN", "code": "002036", "group": "C", "prices": {"100": 2.7, "250": 2.5, "500": 2.3, "1000": 2.1}}, {"name": "EMBALAGEM PVC BOTÃO 10 - 20X40/ 100UN", "code": "002037", "group": "C", "prices": {"100": 2.9, "250": 2.6, "500": 2.4, "1000": 2.2}}, {"name": "EMBALAGEM PVC BOTÃO 11 - 26X34/ 100UN", "code": "002038", "group": "C", "prices": {"100": 3.5, "250": 3.2, "500": 3.0, "1000": 2.7}}, {"name": "EMBALAGEM PVC BOTÃO 12 - 32X37/ 100UN", "code": "002039", "group": "C", "prices": {"100": 4.4, "250": 4.1, "500": 3.7, "1000": 3.4}}, {"name": "EMBALAGEM PVC BOTÃO 13 - 40X45/ 10UN", "code": "002040", "group": "C", "prices": {"100": 7.8, "250": 7.2, "500": 6.6, "1000": 6.0}}, {"name": "EMBALAGEM PVC ZIPER N0 - 8X8CM/ 100UN", "code": "002157", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC ZIPER N1 - 10X10/ 100UN", "code": "002158", "group": "C", "prices": {"100": 1.4, "250": 1.3, "500": 1.2, "1000": 1.1}}, {"name": "EMBALAGEM PVC ZIPER N2 - 12X12/ 100UN", "code": "002159", "group": "C", "prices": {"100": 1.7, "250": 1.6, "500": 1.4, "1000": 1.3}}, {"name": "EMBALAGEM PVC ZIPER N3 - 15X15/ 100UN", "code": "002160", "group": "C", "prices": {"100": 2.0, "250": 1.8, "500": 1.7, "1000": 1.5}}, {"name": "EMBALAGEM PVC ZIPER N4 - 18,5X15/ 100UN", "code": "002041", "group": "C", "prices": {"100": 2.6, "250": 2.4, "500": 2.2, "1000": 2.0}}, {"name": "EMBALAGEM PVC ZIPER N5 - 19X21/ 100UN", "code": "002042", "group": "C", "prices": {"100": 3.1, "250": 2.9, "500": 2.6, "1000": 2.4}}, {"name": "EMBALAGEM PVC ZIPER N6 - 20X24/ 100UN", "code": "002043", "group": "C", "prices": {"100": 3.4, "250": 3.1, "500": 2.9, "1000": 2.6}}, {"name": "EMBALAGEM PVC ZIPER N7 - 21X25/ 100UN", "code": "002110", "group": "C", "prices": {"100": 4.9, "250": 4.6, "500": 4.2, "1000": 3.8}}, {"name": "EMBALAGEM PVC ZIPER N8 - 27X30/ 100UN", "code": "002111", "group": "C", "prices": {"100": 4.9, "250": 4.6, "500": 4.2, "1000": 3.8}}, {"name": "SACOLA PLASTICA ALÇA 30X45", "code": "", "group": "C", "prices": {"100": 1.8, "250": 1.7, "500": 1.5, "1000": 1.4}}, {"name": "SACOLA PLASTICA ALÇA 40X50", "code": "", "group": "C", "prices": {"100": 2.5, "250": 2.3, "500": 2.1, "1000": 1.9}}, {"name": "SACOLA PLASTICA ALÇA 45X55", "code": "", "group": "C", "prices": {"100": 3.1, "250": 2.9, "500": 2.6, "1000": 2.4}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 20X30", "code": "", "group": "C", "prices": {"100": 1.0, "250": 1.0, "500": 0.9, "1000": 0.8}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 30X40", "code": "", "group": "C", "prices": {"100": 1.3, "250": 1.2, "500": 1.1, "1000": 1.0}}, {"name": "SACOLA PLÁSTICA BOCA VAZADA 40x50", "code": "", "group": "C", "prices": {"100": 2.0, "250": 1.8, "500": 1.7, "1000": 1.5}}, {"name": "SAQUINHO CORREIO 13X25", "code": "002071", "group": "C", "prices": {"10": 0.6, "50": 0.36, "100": 0.35, "250": 0.33, "500": 0.32, "1000": 0.3}}, {"name": "SAQUINHO CORREIO 19X25", "code": "002072", "group": "C", "prices": {"10": 1.0, "50": 0.6, "100": 0.58, "250": 0.55, "500": 0.53, "1000": 0.5}}, {"name": "SAQUINHO CORREIO 20X30", "code": "002172", "group": "C", "prices": {"10": 0.6, "50": 0.36, "100": 0.35, "250": 0.33, "500": 0.32, "1000": 0.3}}, {"name": "SAQUINHO CORREIO 26X36", "code": "002078", "group": "C", "prices": {"10": 1.8, "50": 1.08, "100": 1.04, "250": 0.99, "500": 0.95, "1000": 0.9}}, {"name": "SAQUINHO CORREIO 32X40", "code": "002073", "group": "C", "prices": {"10": 2.4, "50": 1.44, "100": 1.38, "250": 1.32, "500": 1.26, "1000": 1.2}}, {"name": "SAQUINHO CORREIO 40X40", "code": "002074", "group": "C", "prices": {"10": 2.0, "50": 1.2, "100": 1.15, "250": 1.1, "500": 1.05, "1000": 1.0}}, {"name": "SAQUINHO CORREIO 40X50", "code": "002170", "group": "C", "prices": {"10": 4.0, "50": 2.4, "100": 2.3, "250": 2.2, "500": 2.1, "1000": 2.0}}, {"name": "SAQUINHO CORREIO 40X60", "code": "002175", "group": "C", "prices": {"10": 5.2, "50": 3.12, "100": 2.99, "250": 2.86, "500": 2.73, "1000": 2.6}}, {"name": "SAQUINHO CORREIO 50X60", "code": "002075", "group": "C", "prices": {"10": 5.4, "50": 3.24, "100": 3.11, "250": 2.97, "500": 2.84, "1000": 2.7}}, {"name": "SAQUINHO CORREIO 26X36 TYF/ROSA", "code": "002179", "group": "C", "prices": {"10": 3.6, "50": 2.16, "100": 2.07, "250": 1.98, "500": 1.89, "1000": 1.8}}, {"name": "SAQUINHO CORREIO 32X40 TYF/ROSA", "code": "002180", "group": "C", "prices": {"10": 4.8, "50": 2.88, "100": 2.76, "250": 2.64, "500": 2.52, "1000": 2.4}}, {"name": "SAQUINHO CORREIO 40X50 TYF/ROSA", "code": "002181", "group": "C", "prices": {"10": 7.2, "50": 4.32, "100": 4.14, "250": 3.96, "500": 3.78, "1000": 3.6}}, {"name": "SAQUINHO CORREIO 50X60 COLORIDO", "code": "002174", "group": "C", "prices": {"10": 6.6, "50": 3.96, "100": 3.8, "250": 3.63, "500": 3.47, "1000": 3.3}}, {"name": "SAQUINHO CORREIO VAZADO 32X40", "code": "002161", "group": "C", "prices": {"10": 3.2, "50": 1.92, "100": 1.84, "250": 1.76, "500": 1.68, "1000": 1.6}}];
+
+/* Personalização silk (embalagens) */
+const SILK_POR_LADO = 0.5;      // R$ por lado, por unidade
+const SILK_GRATIS_ACIMA = 1000; // a partir desta qtd, 1 lado sai grátis
+const TELA_NOVA_VALOR = 140;    // R$ cobrado 1x na primeira compra
+const EMB_PRAZO_DIAS_UTEIS = 15;
+
+/* ----------------------------------------------------------------
+   2) TAGS & ADESIVOS  (aba 🏷️ — mini gráfica)
+   - preco = preço da FOLHA; larg/alt = tamanho da folha em mm
+   - grupo liga o papel à tabela de pedidos mínimos abaixo
+---------------------------------------------------------------- */
+const PAPEIS_GRAFICA = {
+  tag: [
+    { nome: 'TAG Couchê',        preco: 5.40, larg: 310, alt: 450, grupo: 'padrao' },
+    { nome: 'TAG Triplex',       preco: 5.40, larg: 310, alt: 450, grupo: 'padrao' },
+    { nome: 'TAG Kraft',         preco: 5.40, larg: 310, alt: 450, grupo: 'padrao' },
+    { nome: 'Folder Couchê 90g', preco: 2.40, larg: 310, alt: 450, grupo: 'padrao' },
+  ],
+  adesivo: [
+    { nome: 'Adesivo Couchê', preco: 3.80, larg: 310, alt: 450, grupo: 'couche' },
+    { nome: 'Adesivo Kraft',  preco: 5.90, larg: 300, alt: 440, grupo: 'padrao' },
+    { nome: 'Adesivo Vinil',  preco: 8.20, larg: 300, alt: 440, grupo: 'padrao' },
+  ]
+};
+/* Pedido mínimo (R$) por grupo e quantidade */
+const MINIMOS_GRAFICA = {
+  padrao: { 100: 60, 500: 80,  1000: 120 },
+  couche: { 100: 50, 500: 75,  1000: 100 },
+};
+/* Desconto sobre o preço de 1000un: 500un paga 70%, 100un paga 45% */
+const FATOR_500 = 0.70;
+const FATOR_100 = 0.45;
+const SANGRIA_GRAFICA = 5; // mm entre peças
+
+/* ----------------------------------------------------------------
+   3) DTF  (aba 🧵)
+   - precoA4/A3 = preço da folha quando o total cabe nela
+   - faixas: preço por metro conforme metragem total
+     (mude apenas os números em "preco")
+---------------------------------------------------------------- */
+const DTF_LARG_UTIL = 275; // mm de área útil do rolo
+const DTF_MARGEM = 5;      // mm entre artes
+const DTF = {
+  textil: {
+    nome: 'DTF Têxtil',
+    precoA4: 26, precoA3: 44,
+    faixas: [
+      { de:0,  ate:1,    label:'mín. 1m',         preco:71,  minM:1    },
+      { de:1,  ate:3,    label:'até 3m',          preco:71,  minM:null },
+      { de:3,  ate:6,    label:'a partir de 3m',  preco:62,  minM:null },
+      { de:6,  ate:10,   label:'a partir de 6m',  preco:53,  minM:null },
+      { de:10, ate:15,   label:'a partir de 10m', preco:44,  minM:null },
+      { de:15, ate:9999, label:'a partir de 15m', preco:35,  minM:null },
+    ]
+  },
+  uv: {
+    nome: 'DTF UV Rígido',
+    precoA4: 60, precoA3: 95,
+    faixas: [
+      { de:0,  ate:1,    label:'mín. 1m',         preco:220, minM:1    },
+      { de:1,  ate:3,    label:'até 3m',          preco:220, minM:null },
+      { de:3,  ate:6,    label:'a partir de 3m',  preco:210, minM:null },
+      { de:6,  ate:10,   label:'a partir de 6m',  preco:200, minM:null },
+      { de:10, ate:15,   label:'a partir de 10m', preco:190, minM:null },
+      { de:15, ate:9999, label:'a partir de 15m', preco:180, minM:null },
+    ]
+  }
+};
+
+/* ----------------------------------------------------------------
+   4) VINIL / FILME DE RECORTE  (aba ✂️)
+   - a4/a3/metro = preço da folha 40×21 / 40×42 / 40×100cm
+---------------------------------------------------------------- */
+const VINIL_LARG_UTIL = 400; // mm
+const VINIL_MARGEM = 5;      // mm
+const VINIL_PRECOS = {
+  comum:  { label: 'Comum',         a4: 40,  a3: 70,  metro: 120 },
+  metal:  { label: 'Metálico/Neon', a4: 50,  a3: 85,  metro: 160 },
+  reflet: { label: 'Refletivo',     a4: 110, a3: 190, metro: 360 },
+  relevo: { label: 'Alto Relevo',   a4: 80,  a3: 130, metro: 260 },
+};
+
+/* Rodapé do orçamento */
+const VALIDADE_TXT = '_Orçamento válido por 7 dias_';
+const PAGAMENTO_TXT = 'Pagamento: 50% sinal / 50% na entrega ou link de cartão';
+
+/* ================================================================
+   FIM DAS TABELAS — daqui pra baixo é o funcionamento interno
+   ================================================================ */
+
+// ------------------------- utilidades -------------------------
+function fmt(v){ return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+function fmtM(v){ return v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function hojeStr(){ return new Date().toLocaleDateString('pt-BR'); }
+function addDiasUteis(days){
+  let d = new Date(); let added = 0;
+  while (added < days){ d.setDate(d.getDate()+1); const w=d.getDay(); if (w!==0 && w!==6) added++; }
+  return d.toLocaleDateString('pt-BR');
+}
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ------------------------- abas -------------------------
+function switchTab(t){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+t).classList.add('active');
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+// ------------------------- PEDIDO UNIFICADO -------------------------
+/* item: { id, origem, titulo, cliente:[linhas], trello:[linhas], subtotal, prazoEmb:bool } */
+let pedido = [];
+let seq = 0;
+
+function removerItem(id){ pedido = pedido.filter(i=>i.id!==id); renderPedido(); }
+function limparPedido(){ if (pedido.length===0 || confirm('Limpar todos os itens do pedido?')) { pedido=[]; renderPedido(); } }
+
+function gerarTextoWpp(){
+  if (pedido.length===0) return '';
+  const nome = document.getElementById('clienteNome').value.trim();
+  let txt = `*Orçamento — Dama de Ouros*\n`;
+  if (nome) txt += `Cliente: ${nome}\n`;
+  txt += `Data: ${hojeStr()}\n\n`;
+  let total = 0;
+  pedido.forEach((it,idx)=>{
+    total += it.subtotal;
+    txt += `*${idx+1}. ${it.titulo}*\n`;
+    it.cliente.forEach(l=> txt += l + `\n`);
+    txt += `Subtotal: ${fmt(it.subtotal)}\n\n`;
+  });
+  txt += `━━━━━━━━━━━━━━━\n*TOTAL: ${fmt(total)}*\n\n`;
+  if (pedido.some(i=>i.prazoEmb)){
+    txt += PAGAMENTO_TXT + `\n`;
+    txt += `Previsão de entrega: ${addDiasUteis(EMB_PRAZO_DIAS_UTEIS)} (${EMB_PRAZO_DIAS_UTEIS} dias úteis)\n`;
+  }
+  txt += VALIDADE_TXT;
+  return txt;
+}
+
+function gerarTextoTrello(){
+  if (pedido.length===0) return '';
+  const nome = document.getElementById('clienteNome').value.trim();
+  const tel  = document.getElementById('clienteTel').value.trim();
+  let txt = `CLIENTE: ${nome || '—'}${tel ? ' | TEL: ' + tel : ''}\n`;
+  pedido.forEach(it=>{ it.trello.forEach(l=> txt += l + `\n`); });
+  if (pedido.some(i=>i.prazoEmb)) txt += `ENTREGA: ${addDiasUteis(EMB_PRAZO_DIAS_UTEIS)}`;
+  return txt.trim();
+}
+
+function renderPedido(){
+  const box = document.getElementById('pedidoItens');
+  const totRow = document.getElementById('pedTotalRow');
+  const prev = document.getElementById('wppPreview');
+  const bWpp = document.getElementById('btnWpp');
+  const bTre = document.getElementById('btnTrello');
+  const hint = document.getElementById('hintCopy');
+
+  if (pedido.length===0){
+    box.innerHTML = '<div class="pedido-empty">Nenhum item ainda — use as abas acima para montar o pedido</div>';
+    totRow.style.display='none'; prev.style.display='none';
+    bWpp.style.display='none'; bTre.style.display='none'; hint.style.display='none';
+    return;
+  }
+  let total=0;
+  box.innerHTML = pedido.map(it=>{
+    total += it.subtotal;
+    return `<div class="ped-item">
+      <div class="ped-item-top">
+        <div>
+          <span class="ped-origem">${it.origem}</span>
+          <div class="ped-titulo">${esc(it.titulo)}</div>
+          <div class="ped-det">${it.cliente.map(esc).join('<br>')}</div>
+          <div class="ped-sub">${fmt(it.subtotal)}</div>
+        </div>
+        <button class="del-row" onclick="removerItem(${it.id})" title="Remover">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('pedTotal').textContent = fmt(total);
+  totRow.style.display='flex';
+
+  const w = gerarTextoWpp();
+  document.getElementById('wppBubble').innerHTML =
+    esc(w).replace(/\*(.*?)\*/g,'<b>$1</b>').replace(/_(.*?)_/g,'<i>$1</i>');
+  prev.style.display='block'; bWpp.style.display='block'; bTre.style.display='block'; hint.style.display='block';
+}
+
+function copiarWpp(){
+  const t = gerarTextoWpp(); if(!t) return;
+  navigator.clipboard.writeText(t).then(()=>toast('✓ Orçamento copiado — cole no WhatsApp'))
+    .catch(()=>alert('Não foi possível copiar automaticamente.'));
+}
+function copiarTrello(){
+  const t = gerarTextoTrello(); if(!t) return;
+  navigator.clipboard.writeText(t).then(()=>toast('✓ Copiado — cole no checklist do card'))
+    .catch(()=>alert('Não foi possível copiar automaticamente.'));
+}
+
+// ------------------------- ABA EMBALAGENS -------------------------
+let embSel = null;
+
+function embRenderLista(filtro){
+  const list = document.getElementById('embLista');
+  const f = (filtro||'').toLowerCase();
+  const arr = f ? PRODUTOS_EMBALAGENS.filter(p=>p.name.toLowerCase().includes(f)||p.code.includes(f)) : PRODUTOS_EMBALAGENS;
+  if (arr.length===0){ list.innerHTML='<div class="no-results">Nenhum produto encontrado</div>'; return; }
+  list.innerHTML = arr.map(p=>`
+    <div class="product-item${embSel && embSel.name===p.name ? ' selected':''}" onclick="embSelecionar(${PRODUTOS_EMBALAGENS.indexOf(p)})">
+      <span>${esc(p.name)}</span><span class="hint">${embFaixaPreco(p)}</span>
+    </div>`).join('');
+}
+function embSelecionar(idx){
+  embSel = PRODUTOS_EMBALAGENS[idx];
+  const chip = document.getElementById('embSelChip');
+  chip.textContent = '✓ ' + embSel.name; chip.classList.add('visible');
+  const qtys = Object.keys(embSel.prices).map(Number).sort((a,b)=>a-b);
+  document.getElementById('embQtdHint').textContent = 'Faixas: ' + qtys.join(' / ') + ' un';
+  embRenderLista(document.getElementById('embBusca').value);
+  document.getElementById('embErro').classList.remove('visible');
+}
+function embFaixaPreco(p){
+  const qtys=Object.keys(p.prices).map(Number).sort((a,b)=>a-b);
+  const pMax=p.prices[String(qtys[0])], pMin=p.prices[String(qtys[qtys.length-1])];
+  return pMax===pMin ? fmt(pMax)+'/un' : fmt(pMax)+' a '+fmt(pMin)+'/un';
+}
+function embMelhorPreco(prod, qty){
+  const qtys = Object.keys(prod.prices).map(Number).sort((a,b)=>b-a);
+  for (const q of qtys){ if (qty>=q) return prod.prices[String(q)]; }
+  return prod.prices[String(Math.min(...qtys))];
+}
+function embAdicionar(){
+  const erro = document.getElementById('embErro'); erro.classList.remove('visible');
+  if (!embSel){ erro.textContent='Selecione um produto antes de adicionar.'; erro.classList.add('visible'); return; }
+  const qtd = parseInt(document.getElementById('embQtd').value);
+  if (!qtd || qtd<1){ erro.textContent='Informe uma quantidade válida.'; erro.classList.add('visible'); return; }
+  const corProd = document.getElementById('embCorProd').value.trim();
+  const silk = document.getElementById('embSilk').checked;
+  const lados = parseInt(document.getElementById('embLados').value)||1;
+  const tinta = document.getElementById('embTinta').value.trim();
+  const telaNova = silk && document.getElementById('embTela').value==='nova';
+
+  const precoBase = embMelhorPreco(embSel, qtd);
+  const ladosCobrados = silk ? (qtd>=SILK_GRATIS_ACIMA ? Math.max(0,lados-1) : lados) : 0;
+  const precoUnit = precoBase + ladosCobrados*SILK_POR_LADO;
+  const subtotal = precoUnit*qtd + (telaNova?TELA_NOVA_VALOR:0);
+
+  const cliente = [`Quantidade: ${qtd.toLocaleString('pt-BR')} un`];
+  if (corProd) cliente.push(`Cor do produto: ${corProd}`);
+  if (silk){
+    if (qtd>=SILK_GRATIS_ACIMA && lados===1) cliente.push(`Personalização: 1 lado — GRÁTIS`);
+    else if (qtd>=SILK_GRATIS_ACIMA) cliente.push(`Personalização: ${lados} lados (1 grátis + ${lados-1} cobrado${lados-1>1?'s':''})`);
+    else cliente.push(`Personalização: silk ${lados} lado${lados>1?'s':''}`);
+    if (tinta) cliente.push(`Tinta: ${tinta}`);
+    if (telaNova) cliente.push(`Tela nova: ${fmt(TELA_NOVA_VALOR)} (1ª compra)`);
+  }
+  cliente.push(`Unitário: ${fmt(precoUnit)}`);
+
+  const det=[];
+  if (corProd) det.push('cor: '+corProd);
+  if (silk){ det.push('silk '+lados+' lado'+(lados>1?'s':'')); if (tinta) det.push('tinta '+tinta); if (telaNova) det.push('TELA NOVA'); }
+  const trello = [`${embSel.name.toUpperCase()} | ${qtd.toLocaleString('pt-BR')}un${det.length?' | '+det.join(' | '):''}`];
+
+  pedido.push({ id:++seq, origem:'EMBALAGEM', titulo:embSel.name, cliente, trello, subtotal, prazoEmb:silk });
+
+  // limpa campos
+  embSel=null;
+  document.getElementById('embSelChip').classList.remove('visible');
+  document.getElementById('embQtd').value=''; document.getElementById('embCorProd').value='';
+  document.getElementById('embTinta').value=''; document.getElementById('embQtdHint').textContent='';
+  document.getElementById('embSilk').checked=false; document.getElementById('embSilkFields').classList.remove('visible');
+  document.getElementById('embTela').value='existente';
+  document.getElementById('embBusca').value=''; embRenderLista('');
+  renderPedido(); toast('✓ Embalagem adicionada ao pedido');
+}
+
+// ------------------------- ABA TAGS & ADESIVOS -------------------------
+let grTipo='tag', grCalc=null, grQtdSel=null;
+
+function grSetTipo(t){
+  grTipo=t; grCalc=null; grQtdSel=null;
+  document.getElementById('grSegTag').classList.toggle('active', t==='tag');
+  document.getElementById('grSegAdesivo').classList.toggle('active', t==='adesivo');
+  document.getElementById('grResultado').style.display='none';
+  document.getElementById('grErro').classList.remove('visible');
+  grFillSelect();
+}
+function grFillSelect(){
+  const sel=document.getElementById('grPapel'); sel.innerHTML='';
+  PAPEIS_GRAFICA[grTipo].forEach((p,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=p.nome; sel.appendChild(o); });
+}
+function grRendimento(fL,fA,pL,pA){
+  const s=SANGRIA_GRAFICA;
+  const a=Math.floor(fL/(pL+s))*Math.floor(fA/(pA+s));
+  const b=Math.floor(fL/(pA+s))*Math.floor(fA/(pL+s));
+  return Math.max(a,b);
+}
+function grCalcular(){
+  const erro=document.getElementById('grErro'); erro.classList.remove('visible');
+  document.getElementById('grResultado').style.display='none';
+  document.getElementById('grBtnAdd').style.display='none';
+  grQtdSel=null;
+  const papel=PAPEIS_GRAFICA[grTipo][parseInt(document.getElementById('grPapel').value)];
+  const larg=parseFloat(document.getElementById('grLarg').value);
+  const alt=parseFloat(document.getElementById('grAlt').value);
+  if (!larg||!alt||larg<=0||alt<=0){ erro.textContent='Informe a largura e a altura da peça.'; erro.classList.add('visible'); return; }
+  const porFolha=grRendimento(papel.larg,papel.alt,larg,alt);
+  if (porFolha<1){ erro.textContent=`A peça não cabe na folha de ${papel.larg}×${papel.alt}mm com ${SANGRIA_GRAFICA}mm de sangria.`; erro.classList.add('visible'); return; }
+
+  const mins=MINIMOS_GRAFICA[papel.grupo];
+  const folhas1000=Math.ceil(1000/porFolha);
+  const bruto1000=Math.ceil(folhas1000*papel.preco);
+  const acima=bruto1000>mins[1000];
+  const total1000=acima?bruto1000:mins[1000];
+  let total500,total100,min500,min100;
+  if (acima){
+    const d500=Math.ceil(total1000*FATOR_500), d100=Math.ceil(total1000*FATOR_100);
+    total500=Math.max(d500,mins[500]); total100=Math.max(d100,mins[100]);
+    min500=d500<mins[500]; min100=d100<mins[100];
+  } else { total500=mins[500]; total100=mins[100]; min500=true; min100=true; }
+
+  grCalc={papel,larg,alt,porFolha,itens:[
+    {qtd:100,total:total100,usouMin:min100},
+    {qtd:500,total:total500,usouMin:min500},
+    {qtd:1000,total:total1000,usouMin:!acima},
+  ]};
+  document.getElementById('grInfo').innerHTML=`<strong>${papel.nome}</strong> — folha ${papel.larg}×${papel.alt}mm — <strong>${porFolha} peças/folha</strong> (sangria ${SANGRIA_GRAFICA}mm)`;
+  const cards=document.getElementById('grCards');
+  cards.innerHTML=grCalc.itens.map(d=>`
+    <div class="qty-card" id="grCard-${d.qtd}" onclick="grSelQtd(${d.qtd})">
+      ${d.usouMin?'<span class="badge-min">mínimo</span>':''}
+      <div class="q-label">${d.qtd.toLocaleString('pt-BR')} un</div>
+      <div class="q-total">${fmt(d.total)}</div>
+      <div class="q-unit">${fmt(d.total/d.qtd)} / un</div>
+    </div>`).join('');
+  document.getElementById('grResultado').style.display='block';
+}
+function grSelQtd(q){
+  grQtdSel=q;
+  document.querySelectorAll('#grCards .qty-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('grCard-'+q).classList.add('selected');
+  document.getElementById('grBtnAdd').style.display='block';
+}
+function grAdicionar(){
+  if (!grCalc||!grQtdSel) return;
+  const item=grCalc.itens.find(d=>d.qtd===grQtdSel);
+  const {papel,larg,alt}=grCalc;
+  pedido.push({
+    id:++seq, origem: grTipo==='tag'?'TAG/FOLDER':'ADESIVO',
+    titulo: papel.nome,
+    cliente:[`Medida: ${larg}×${alt}mm`,`Quantidade: ${grQtdSel.toLocaleString('pt-BR')} un`,`Unitário: ${fmt(item.total/grQtdSel)}`],
+    trello:[`${papel.nome.toUpperCase()} | ${larg}×${alt}mm | ${grQtdSel.toLocaleString('pt-BR')}un`],
+    subtotal:item.total, prazoEmb:false
+  });
+  document.getElementById('grResultado').style.display='none';
+  document.getElementById('grLarg').value=''; document.getElementById('grAlt').value='';
+  grCalc=null; grQtdSel=null;
+  renderPedido(); toast('✓ Item adicionado ao pedido');
+}
+
+// ------------------------- ABA DTF -------------------------
+let dtfTipo='textil', dtfSeq=0;
+
+function dtfSetTipo(t){
+  dtfTipo=t;
+  document.getElementById('dtfSegTextil').classList.toggle('active',t==='textil');
+  document.getElementById('dtfSegUv').classList.toggle('active',t==='uv');
+  dtfRecalc();
+}
+function dtfCols(w){ return w>0?Math.floor((DTF_LARG_UTIL+DTF_MARGEM)/(w+DTF_MARGEM)):0; }
+function dtfCalcTotal(tipo,totalM){
+  const p=DTF[tipo];
+  if (totalM<=0) return null;
+  if (totalM<=0.21) return {label:'A4 (até 21cm)', valor:p.precoA4};
+  if (totalM<=0.42) return {label:'A3 (até 42cm)', valor:p.precoA3};
+  const f=p.faixas.find(x=>totalM>=x.de && totalM<x.ate) || p.faixas[p.faixas.length-1];
+  const mCob=f.minM?f.minM:totalM;
+  return {label:f.label, valor:mCob*f.preco};
+}
+function dtfAddRow(){
+  dtfSeq++;
+  const id='dtf'+dtfSeq;
+  const div=document.createElement('div');
+  div.className='proj-row'; div.id='row-'+id;
+  div.innerHTML=`
+    <div class="proj-grid">
+      <div class="field-group fg"><label>Arte / projeto</label><input type="text" id="${id}-nome" placeholder="ex: logo frente" oninput="dtfRecalc()"></div>
+      <div class="field-group fg"><label>Larg (mm)</label><input type="number" id="${id}-w" min="1" max="${DTF_LARG_UTIL}" placeholder="—" oninput="dtfRecalc()"></div>
+      <div class="field-group fg"><label>Comp (mm)</label><input type="number" id="${id}-h" min="1" placeholder="—" oninput="dtfRecalc()"></div>
+      <div class="field-group fg"><label>Qtde</label><input type="number" id="${id}-q" min="1" placeholder="0" oninput="dtfRecalc()"></div>
+    </div>
+    <div class="proj-foot">
+      <span id="${id}-info">— preencha medida e quantidade</span>
+      <button class="del-row" onclick="document.getElementById('row-${id}').remove();dtfRecalc()">✕</button>
+    </div>`;
+  document.getElementById('dtfRows').appendChild(div);
+}
+function dtfDados(){
+  const linhas=[];
+  document.querySelectorAll('#dtfRows .proj-row').forEach(row=>{
+    const id=row.id.replace('row-','');
+    const nome=(document.getElementById(id+'-nome')?.value||'').trim();
+    const w=parseFloat(document.getElementById(id+'-w')?.value)||0;
+    const h=parseFloat(document.getElementById(id+'-h')?.value)||0;
+    const q=parseInt(document.getElementById(id+'-q')?.value)||0;
+    // testa orientação normal e girada, escolhe a de menos metros
+    function metrosDe(wx,hx){
+      const c=dtfCols(wx);
+      if (q<=0||c<=0||hx<=0) return 0;
+      return (Math.ceil(q/c)*(hx+DTF_MARGEM)-DTF_MARGEM)/1000;
+    }
+    const mN=metrosDe(w,h), mG=metrosDe(h,w);
+    let metros=0, girada=false;
+    if (mN>0 && (mG<=0 || mN<=mG)) { metros=mN; }
+    else if (mG>0) { metros=mG; girada=true; }
+    const info=document.getElementById(id+'-info');
+    if (info) info.innerHTML = metros>0 ? `Metragem: <b>${fmtM(metros)}m</b>${girada?' <span style="color:var(--roxo)">↻ girada</span>':''}` : '— preencha medida e quantidade';
+    if (w&&h&&q&&metros>0) linhas.push({nome,w,h,q,metros,girada});
+  });
+  return linhas;
+}
+function dtfRecalc(){
+  const linhas=dtfDados();
+  const tot=linhas.reduce((s,l)=>s+l.metros,0);
+  const box=document.getElementById('dtfTotais');
+  if (tot<=0){ box.style.display='none'; return; }
+  const ct=dtfCalcTotal(dtfTipo,tot);
+  document.getElementById('dtfTotM').textContent=fmtM(tot)+'m';
+  document.getElementById('dtfFaixa').textContent=ct.label;
+  document.getElementById('dtfValor').textContent=fmt(ct.valor);
+  box.style.display='flex';
+}
+function dtfAdicionar(){
+  const erro=document.getElementById('dtfErro'); erro.classList.remove('visible');
+  const linhas=dtfDados();
+  if (linhas.length===0){ erro.textContent='Preencha ao menos uma arte com medida e quantidade.'; erro.classList.add('visible'); return; }
+  const tot=linhas.reduce((s,l)=>s+l.metros,0);
+  const ct=dtfCalcTotal(dtfTipo,tot);
+  const prod=DTF[dtfTipo];
+  const cliente=[];
+  linhas.forEach(l=>cliente.push(`${l.nome||'Arte'}: ${l.w}×${l.h}mm — ${l.q} un (${fmtM(l.metros)}m)`));
+  cliente.push(`Total: ${fmtM(tot)}m (${ct.label})`);
+  const trello=linhas.map(l=>`${prod.nome.toUpperCase()}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un | ${fmtM(l.metros)}m${l.girada?' (girada)':''}`);
+  trello.push(`${prod.nome.toUpperCase()} TOTAL: ${fmtM(tot)}m`);
+  pedido.push({ id:++seq, origem:'DTF', titulo:`${prod.nome} — ${fmtM(tot)}m`, cliente, trello, subtotal:ct.valor, prazoEmb:false });
+  document.getElementById('dtfRows').innerHTML=''; dtfAddRow(); dtfRecalc();
+  renderPedido(); toast('✓ DTF adicionado ao pedido');
+}
+
+// ------------------------- ABA VINIL -------------------------
+let vinSeq=0;
+
+function vinCols(w){ return w>0?Math.floor((VINIL_LARG_UTIL+VINIL_MARGEM)/(w+VINIL_MARGEM)):0; }
+function vinLins(alt,h){ return h>0?Math.max(0,Math.floor((alt+VINIL_MARGEM)/(h+VINIL_MARGEM))):0; }
+function vinCalcLinha(w,h,qty,tipo){
+  if (!w||!h||!qty||!tipo||!VINIL_PRECOS[tipo]) return null;
+  const c=vinCols(w); if (c<=0) return null;
+  const p=VINIL_PRECOS[tipo];
+  const porA4=c*vinLins(210,h), porA3=c*vinLins(420,h), porMt=c*vinLins(1000,h);
+  if (porA4>0 && qty<=porA4) return {label:'1 folha A4', valor:p.a4};
+  if (porA3>0 && qty<=porA3) return {label:'1 folha A3', valor:p.a3};
+  if (porMt>0 && qty<=porMt) return {label:'1 metro',    valor:p.metro};
+  if (porMt>0){
+    const metros=(Math.ceil(qty/c)*(h+VINIL_MARGEM)-VINIL_MARGEM)/1000;
+    const mCobr=Math.ceil(metros*100)/100;
+    return {label:`${fmtM(mCobr)}m corridos`, valor:mCobr*p.metro};
+  }
+  return null;
+}
+function vinAddRow(){
+  vinSeq++;
+  const id='vin'+vinSeq;
+  const opts=Object.entries(VINIL_PRECOS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  const div=document.createElement('div');
+  div.className='proj-row'; div.id='row-'+id;
+  div.innerHTML=`
+    <div class="proj-grid-vinil">
+      <div class="field-group fg"><label>Arte / projeto</label><input type="text" id="${id}-nome" placeholder="ex: camiseta evento" oninput="vinRecalc()"></div>
+      <div class="field-group fg"><label>Tipo de vinil</label><select id="${id}-tipo" onchange="vinRecalc()"><option value="">— selecione —</option>${opts}</select></div>
+      <div class="field-group fg"><label>Cor</label><input type="text" id="${id}-cor" placeholder="ex: ouro" oninput="vinRecalc()"></div>
+    </div>
+    <div class="proj-grid-vinil2">
+      <div class="field-group fg"><label>Larg (mm)</label><input type="number" id="${id}-w" min="1" max="${VINIL_LARG_UTIL}" placeholder="—" oninput="vinRecalc()"></div>
+      <div class="field-group fg"><label>Comp (mm)</label><input type="number" id="${id}-h" min="1" placeholder="—" oninput="vinRecalc()"></div>
+      <div class="field-group fg"><label>Qtde</label><input type="number" id="${id}-q" min="1" placeholder="0" oninput="vinRecalc()"></div>
+    </div>
+    <div class="proj-foot">
+      <span id="${id}-info">— preencha tipo, medida e quantidade</span>
+      <button class="del-row" onclick="document.getElementById('row-${id}').remove();vinRecalc()">✕</button>
+    </div>`;
+  document.getElementById('vinRows').appendChild(div);
+}
+function vinDados(){
+  const linhas=[];
+  document.querySelectorAll('#vinRows .proj-row').forEach(row=>{
+    const id=row.id.replace('row-','');
+    const nome=(document.getElementById(id+'-nome')?.value||'').trim();
+    const tipo=document.getElementById(id+'-tipo')?.value||'';
+    const cor=(document.getElementById(id+'-cor')?.value||'').trim();
+    const w=parseFloat(document.getElementById(id+'-w')?.value)||0;
+    const h=parseFloat(document.getElementById(id+'-h')?.value)||0;
+    const q=parseInt(document.getElementById(id+'-q')?.value)||0;
+    const calc=vinCalcLinha(w,h,q,tipo);
+    const info=document.getElementById(id+'-info');
+    if (info) info.innerHTML = calc ? `${calc.label} — <b>${fmt(calc.valor)}</b> (${fmt(calc.valor/q)}/un)` : '— preencha tipo, medida e quantidade';
+    if (calc) linhas.push({nome,tipo,cor,w,h,q,calc});
+  });
+  return linhas;
+}
+function vinRecalc(){ vinDados(); }
+function vinAdicionar(){
+  const erro=document.getElementById('vinErro'); erro.classList.remove('visible');
+  const linhas=vinDados();
+  if (linhas.length===0){ erro.textContent='Preencha ao menos uma arte com tipo, medida e quantidade.'; erro.classList.add('visible'); return; }
+  linhas.forEach(l=>{
+    const p=VINIL_PRECOS[l.tipo];
+    const titulo=`Vinil ${p.label}${l.cor?' — '+l.cor:''}${l.nome?' ('+l.nome+')':''}`;
+    pedido.push({
+      id:++seq, origem:'VINIL', titulo,
+      cliente:[`Medida: ${l.w}×${l.h}mm`,`Quantidade: ${l.q} un`,`Unitário: ${fmt(l.calc.valor/l.q)}`],
+      trello:[`VINIL ${p.label.toUpperCase()}${l.cor?' '+l.cor.toUpperCase():''}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un`],
+      subtotal:l.calc.valor, prazoEmb:false
+    });
+  });
+  document.getElementById('vinRows').innerHTML=''; vinAddRow();
+  renderPedido(); toast('✓ Vinil adicionado ao pedido');
+}
+
+// ------------------------- inicialização -------------------------
+document.getElementById('embBusca').addEventListener('input', e=>embRenderLista(e.target.value));
+document.getElementById('embSilk').addEventListener('change', function(){
+  document.getElementById('embSilkFields').classList.toggle('visible', this.checked);
+});
+embRenderLista('');
+grFillSelect();
+dtfAddRow(); dtfAddRow();
+vinAddRow();
+</script>
+</body>
+</html>
