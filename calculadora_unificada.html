@@ -750,12 +750,31 @@ function dtfDados(){
       if (q<=0||c<=0||hx<=0) return 0;
       return (Math.ceil(q/c)*(hx+DTF_MARGEM)-DTF_MARGEM)/1000;
     }
+    function rendDe(wx,hx){
+      const c=dtfCols(wx);
+      if (c<=0||hx<=0) return null;
+      const lin=(alt)=>Math.max(0,Math.floor((alt+DTF_MARGEM)/(hx+DTF_MARGEM)));
+      return { a4:c*lin(210), a3:c*lin(420), m:c*lin(1000) };
+    }
     const mN=metrosDe(w,h), mG=metrosDe(h,w);
     let metros=0, girada=false;
     if (mN>0 && (mG<=0 || mN<=mG)) { metros=mN; }
     else if (mG>0) { metros=mG; girada=true; }
+    // rendimento: usa a orientação escolhida; sem qtde ainda, usa a de melhor rendimento por metro
+    const rN=rendDe(w,h), rG=rendDe(h,w);
+    let rend=null, rendGirada=girada;
+    if (metros>0){ rend = girada?rG:rN; }
+    else if (rN||rG){
+      if (rG && (!rN || rG.m>rN.m)) { rend=rG; rendGirada=true; }
+      else { rend=rN; rendGirada=false; }
+    }
     const info=document.getElementById(id+'-info');
-    if (info) info.innerHTML = metros>0 ? `Metragem: <b>${fmtM(metros)}m</b>${girada?' <span style="color:var(--roxo)">↻ girada</span>':''}` : '— preencha medida e quantidade';
+    if (info){
+      const partes=[];
+      if (metros>0) partes.push(`Metragem: <b>${fmtM(metros)}m</b>`);
+      if (rend) partes.push(`Rende: <b>${rend.a4}</b>/A4 · <b>${rend.a3}</b>/A3 · <b>${rend.m}</b>/metro${rendGirada?' <span style="color:var(--roxo)">↻ girada</span>':''}`);
+      info.innerHTML = partes.length ? partes.join(' &nbsp;·&nbsp; ') : '— preencha a medida da arte';
+    }
     if (w&&h&&q&&metros>0) linhas.push({nome,w,h,q,metros,girada});
   });
   return linhas;
@@ -842,8 +861,15 @@ function vinDados(){
     const h=parseFloat(document.getElementById(id+'-h')?.value)||0;
     const q=parseInt(document.getElementById(id+'-q')?.value)||0;
     const calc=vinCalcLinha(w,h,q,tipo);
+    const c=vinCols(w);
+    const rend=(c>0&&h>0) ? { a4:c*vinLins(210,h), a3:c*vinLins(420,h), m:c*vinLins(1000,h) } : null;
     const info=document.getElementById(id+'-info');
-    if (info) info.innerHTML = calc ? `${calc.label} — <b>${fmt(calc.valor)}</b> (${fmt(calc.valor/q)}/un)` : '— preencha tipo, medida e quantidade';
+    if (info){
+      const partes=[];
+      if (calc) partes.push(`${calc.label} — <b>${fmt(calc.valor)}</b> (${fmt(calc.valor/q)}/un)`);
+      if (rend) partes.push(`Rende: <b>${rend.a4}</b>/A4 · <b>${rend.a3}</b>/A3 · <b>${rend.m}</b>/metro`);
+      info.innerHTML = partes.length ? partes.join(' &nbsp;·&nbsp; ') : '— preencha tipo, medida e quantidade';
+    }
     if (calc) linhas.push({nome,tipo,cor,w,h,q,calc});
   });
   return linhas;
