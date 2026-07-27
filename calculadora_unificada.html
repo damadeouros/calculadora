@@ -816,14 +816,15 @@ function vinCalcLinha(w,h,qty,tipo){
   if (!w||!h||!qty||!tipo||!VINIL_PRECOS[tipo]) return null;
   const c=vinCols(w); if (c<=0) return null;
   const p=VINIL_PRECOS[tipo];
+  // metragem realmente consumida pela arte (altura ocupada no rolo), sempre
+  const metros=(Math.ceil(qty/c)*(h+VINIL_MARGEM)-VINIL_MARGEM)/1000;
+  const mTotal=Math.ceil(metros*100)/100;
   const porA4=c*vinLins(210,h), porA3=c*vinLins(420,h), porMt=c*vinLins(1000,h);
-  if (porA4>0 && qty<=porA4) return {label:'1 folha A4', valor:p.a4};
-  if (porA3>0 && qty<=porA3) return {label:'1 folha A3', valor:p.a3};
-  if (porMt>0 && qty<=porMt) return {label:'1 metro',    valor:p.metro};
+  if (porA4>0 && qty<=porA4) return {label:'1 folha A4', valor:p.a4, metros:mTotal};
+  if (porA3>0 && qty<=porA3) return {label:'1 folha A3', valor:p.a3, metros:mTotal};
+  if (porMt>0 && qty<=porMt) return {label:'1 metro',    valor:p.metro, metros:mTotal};
   if (porMt>0){
-    const metros=(Math.ceil(qty/c)*(h+VINIL_MARGEM)-VINIL_MARGEM)/1000;
-    const mCobr=Math.ceil(metros*100)/100;
-    return {label:`${fmtM(mCobr)}m corridos`, valor:mCobr*p.metro};
+    return {label:`${fmtM(mTotal)}m corridos`, valor:mTotal*p.metro, metros:mTotal};
   }
   return null;
 }
@@ -867,6 +868,7 @@ function vinDados(){
     if (info){
       const partes=[];
       if (calc) partes.push(`${calc.label} — <b>${fmt(calc.valor)}</b> (${fmt(calc.valor/q)}/un)`);
+      if (calc) partes.push(`Total: <b>${fmtM(calc.metros)}m</b>`);
       if (rend) partes.push(`Rende: <b>${rend.a4}</b>/A4 · <b>${rend.a3}</b>/A3 · <b>${rend.m}</b>/metro`);
       info.innerHTML = partes.length ? partes.join(' &nbsp;·&nbsp; ') : '— preencha tipo, medida e quantidade';
     }
@@ -884,8 +886,8 @@ function vinAdicionar(){
     const titulo=`Vinil ${p.label}${l.cor?' — '+l.cor:''}${l.nome?' ('+l.nome+')':''}`;
     pedido.push({
       id:++seq, origem:'VINIL', titulo,
-      cliente:[`Medida: ${l.w}×${l.h}mm`,`Quantidade: ${l.q} un`,`Unitário: ${fmt(l.calc.valor/l.q)}`],
-      trello:[`VINIL ${p.label.toUpperCase()}${l.cor?' '+l.cor.toUpperCase():''}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un`],
+      cliente:[`Medida: ${l.w}×${l.h}mm`,`Quantidade: ${l.q} un`,`Metragem: ${fmtM(l.calc.metros)}m`,`Unitário: ${fmt(l.calc.valor/l.q)}`],
+      trello:[`VINIL ${p.label.toUpperCase()}${l.cor?' '+l.cor.toUpperCase():''}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un | ${fmtM(l.calc.metros)}m`],
       subtotal:l.calc.valor, prazoEmb:false
     });
   });
