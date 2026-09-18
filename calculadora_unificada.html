@@ -69,7 +69,7 @@ header p{font-size:12px;color:var(--marrom-cl);font-weight:500}
 .toggle-row input{width:18px;height:18px;accent-color:var(--ouro-esc);cursor:pointer}
 .toggle-row span{font-size:14px;font-weight:500}
 .silk-fields{display:none;margin-top:10px}
-.silk-fields.visible{display:flex}
+.silk-fields.visible{display:block}
 
 .error-msg{display:none;font-size:13px;color:var(--vermelho);background:#FDEBEB;border:1px solid #F3C3C3;border-radius:8px;padding:9px 12px;margin-top:10px}
 .error-msg.visible{display:block}
@@ -135,6 +135,33 @@ header p{font-size:12px;color:var(--marrom-cl);font-weight:500}
   .proj-grid{grid-template-columns:1.5fr 1fr 1fr 1fr}
   .tabs .tab-btn{min-width:calc(50% - 6px)}
 }
+
+/* --- Vinil: painéis de config e badges --- */
+.vin-ref{background:var(--card);border:1px solid var(--borda);border-radius:12px;overflow:hidden;margin-bottom:12px}
+.vin-ref-tog{display:flex;align-items:center;justify-content:space-between;padding:11px 15px;cursor:pointer;user-select:none}
+.vin-ref-tog span{font-size:13px;font-weight:600;color:var(--marrom-cl)}
+.vin-ref-tog small{font-size:11px;color:var(--texto-sec)}
+.vin-ref-body{display:none;padding:0 15px 14px}
+.vin-ref-body.open{display:block}
+.vin-nota{font-size:12px;color:var(--texto-sec);line-height:1.5;margin-bottom:10px}
+.vin-markup-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;font-size:13px;font-weight:600}
+.vin-cfg{font-family:'Inter',sans-serif;width:74px;font-size:13px;border:1.5px solid var(--borda);border-radius:7px;padding:6px 8px;outline:none}
+.vin-cfg:focus{border-color:var(--ouro)}
+.vin-cfg-table{width:100%;border-collapse:collapse;font-size:12px}
+.vin-cfg-table th{background:var(--marrom);color:var(--ouro);padding:7px 9px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.vin-cfg-table td{padding:6px 9px;border-bottom:1px solid var(--borda)}
+.vin-cfg-table tr:last-child td{border-bottom:none}
+.vin-cfg-table tr:nth-child(even) td{background:var(--linha-alt)}
+.vin-badge,.vin-nb{display:inline-block;font-size:10px;font-weight:600;border-radius:20px;padding:2px 9px;white-space:nowrap}
+.vb-comum{background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7}
+.vb-metal{background:#FFF8E1;color:#F57F17;border:1px solid #FFE082}
+.vb-reflet{background:#F3E5F5;color:#6A1B9A;border:1px solid #CE93D8}
+.vb-relevo{background:#FCE4EC;color:#880E4F;border:1px solid #F48FB1}
+.nb-facil{background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7}
+.nb-medio{background:#FFF8E1;color:#F57F17;border:1px solid #FFE082}
+.nb-dificil{background:#FFE9D6;color:#E65100;border:1px solid #FFB877}
+.nb-osso{background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A}
+.proj-grid-vinil2{grid-template-columns:1fr 1fr 1fr 1.1fr}
 </style>
 </head>
 <body>
@@ -199,28 +226,35 @@ header p{font-size:12px;color:var(--marrom-cl);font-weight:500}
       </div>
       <label class="toggle-row">
         <input type="checkbox" id="embSilk">
-        <span>Incluir personalização (silk screen)</span>
+        <span>Incluir personalização</span>
       </label>
-      <div class="fields-row silk-fields" id="embSilkFields">
-        <div class="field-group">
-          <label for="embLados">Lados</label>
-          <select id="embLados">
-            <option value="1">1 lado</option><option value="2">2 lados</option>
-            <option value="3">3 lados</option><option value="4">4 lados</option>
-          </select>
-          <span class="hint">R$ 0,50/lado por unidade · 1 lado grátis acima de 1000un</span>
+      <div class="silk-fields" id="embSilkFields">
+        <div class="seg" style="margin-bottom:12px">
+          <button type="button" class="active" id="embMetSilk" onclick="embSetMetodo('silk')">🖨️ Silk screen</button>
+          <button type="button" id="embMetDigital" onclick="embSetMetodo('digital')">🎨 Imp. digital</button>
         </div>
-        <div class="field-group">
-          <label for="embTinta">Cor da tinta</label>
-          <input type="text" id="embTinta" placeholder="Ex: preta, branca...">
+        <div class="fields-row">
+          <div class="field-group">
+            <label for="embLados">Lados</label>
+            <select id="embLados">
+              <option value="1">1 lado</option><option value="2">2 lados</option>
+              <option value="3">3 lados</option><option value="4">4 lados</option>
+            </select>
+            <span class="hint">R$ 0,50/lado por unidade · 1 lado grátis acima de 1000un</span>
+          </div>
+          <div class="field-group" id="embTintaGroup">
+            <label for="embTinta">Cor da tinta</label>
+            <input type="text" id="embTinta" placeholder="Ex: preta, branca...">
+          </div>
+          <div class="field-group" id="embTelaGroup">
+            <label for="embTela">Tela de silk</label>
+            <select id="embTela">
+              <option value="existente">Tela existente — R$ 0,00</option>
+              <option value="nova">Tela nova — R$ 140,00</option>
+            </select>
+          </div>
         </div>
-        <div class="field-group">
-          <label for="embTela">Tela de silk</label>
-          <select id="embTela">
-            <option value="existente">Tela existente — R$ 0,00</option>
-            <option value="nova">Tela nova — R$ 140,00</option>
-          </select>
-        </div>
+        <span class="hint" id="embPrazoHint" style="margin-top:8px;display:block"></span>
       </div>
       <div class="error-msg" id="embErro"></div>
       <button class="btn btn-ouro" onclick="embAdicionar()">+ Adicionar ao pedido</button>
@@ -281,6 +315,73 @@ header p{font-size:12px;color:var(--marrom-cl);font-weight:500}
 
   <!-- ===================== ABA VINIL ===================== -->
   <div class="tab-panel" id="panel-vin">
+
+    <!-- Painel material: custo + markup (colapsável) -->
+    <div class="vin-ref">
+      <div class="vin-ref-tog" onclick="vinToggle('vinMatBody','vinMatHint')">
+        <span>💠 Material — custo e markup</span><small id="vinMatHint">ajustar ▾</small>
+      </div>
+      <div class="vin-ref-body" id="vinMatBody">
+        <p class="vin-nota"><b>Metro</b> = custo/m × markup (só material; a limpeza entra à parte). <b>A4/A3</b> são fixos, com o preparo já embutido.</p>
+        <div class="vin-markup-row">
+          <span>Markup do material (só metro):</span>
+          <input class="vin-cfg" id="vinMarkup" type="number" min="1" step="0.1" value="3" oninput="vinRecalc()"> ×
+        </div>
+        <table class="vin-cfg-table">
+          <thead><tr><th>Tipo</th><th>Custo/m</th><th>A4 fixo</th><th>A3 fixo</th><th>Metro (=custo×markup)</th></tr></thead>
+          <tbody>
+            <tr><td><span class="vin-badge vb-comum">Comum</span></td>
+              <td>R$ <input class="vin-cfg" id="vinCusto-comum" type="number" min="0" step="0.5" value="26" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA4-comum" type="number" min="0" step="0.5" value="40" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA3-comum" type="number" min="0" step="0.5" value="70" oninput="vinRecalc()"></td>
+              <td id="vinPM-comum">—</td></tr>
+            <tr><td><span class="vin-badge vb-metal">Metálico/Neon</span></td>
+              <td>R$ <input class="vin-cfg" id="vinCusto-metal" type="number" min="0" step="0.5" value="36" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA4-metal" type="number" min="0" step="0.5" value="50" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA3-metal" type="number" min="0" step="0.5" value="85" oninput="vinRecalc()"></td>
+              <td id="vinPM-metal">—</td></tr>
+            <tr><td><span class="vin-badge vb-reflet">Refletivo</span></td>
+              <td>R$ <input class="vin-cfg" id="vinCusto-reflet" type="number" min="0" step="0.5" value="96" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA4-reflet" type="number" min="0" step="0.5" value="110" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA3-reflet" type="number" min="0" step="0.5" value="190" oninput="vinRecalc()"></td>
+              <td id="vinPM-reflet">—</td></tr>
+            <tr><td><span class="vin-badge vb-relevo">Alto Relevo</span></td>
+              <td>R$ <input class="vin-cfg" id="vinCusto-relevo" type="number" min="0" step="0.5" value="52" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA4-relevo" type="number" min="0" step="0.5" value="80" oninput="vinRecalc()"></td>
+              <td>R$ <input class="vin-cfg" id="vinA3-relevo" type="number" min="0" step="0.5" value="130" oninput="vinRecalc()"></td>
+              <td id="vinPM-relevo">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Painel limpeza / weeding (colapsável) -->
+    <div class="vin-ref">
+      <div class="vin-ref-tog" onclick="vinToggle('vinLimpBody','vinLimpHint')">
+        <span>🧹 Níveis de limpeza (weeding) — automático por peças no metro</span><small id="vinLimpHint">ajustar ▾</small>
+      </div>
+      <div class="vin-ref-body" id="vinLimpBody">
+        <p class="vin-nota">O nível é escolhido sozinho pela quantidade de peças que cabe em <b>1 metro</b>: mais peças = mais bordas pra destacar = limpeza mais cara. Cobrada sobre a metragem real de cada arte.</p>
+        <table class="vin-cfg-table">
+          <thead><tr><th>Nível</th><th>Peças por metro</th><th>Limpeza (R$/m)</th></tr></thead>
+          <tbody>
+            <tr><td><span class="vin-nb nb-facil">🟢 Fácil</span></td>
+              <td>até <input class="vin-cfg" id="vinLim-facil" type="number" min="1" value="50" oninput="vinRecalc()"> peças</td>
+              <td>R$ <input class="vin-cfg" id="vinAdd-facil" type="number" min="0" step="0.5" value="30" oninput="vinRecalc()"> /m</td></tr>
+            <tr><td><span class="vin-nb nb-medio">🟡 Médio</span></td>
+              <td>até <input class="vin-cfg" id="vinLim-medio" type="number" min="1" value="300" oninput="vinRecalc()"> peças</td>
+              <td>R$ <input class="vin-cfg" id="vinAdd-medio" type="number" min="0" step="0.5" value="60" oninput="vinRecalc()"> /m</td></tr>
+            <tr><td><span class="vin-nb nb-dificil">🟠 Difícil</span></td>
+              <td>até <input class="vin-cfg" id="vinLim-dificil" type="number" min="1" value="600" oninput="vinRecalc()"> peças</td>
+              <td>R$ <input class="vin-cfg" id="vinAdd-dificil" type="number" min="0" step="0.5" value="90" oninput="vinRecalc()"> /m</td></tr>
+            <tr><td><span class="vin-nb nb-osso">🔴 Osso</span></td>
+              <td><span style="color:var(--texto-sec);font-size:12px">acima disso</span></td>
+              <td>R$ <input class="vin-cfg" id="vinAdd-osso" type="number" min="0" step="0.5" value="120" oninput="vinRecalc()"> /m</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">Projetos de vinil / filme de recorte</div>
       <div id="vinRows"></div>
@@ -289,6 +390,7 @@ header p{font-size:12px;color:var(--marrom-cl);font-weight:500}
       <button class="btn btn-ouro" onclick="vinAdicionar()">+ Adicionar vinil ao pedido</button>
     </div>
   </div>
+
 
   <!-- ===================== PEDIDO UNIFICADO ===================== -->
   <div class="pedido">
@@ -340,7 +442,8 @@ const PRODUTOS_EMBALAGENS = [{"name": "CX. PAP. CORREIO - 18X12X6", "code": "002
 const SILK_POR_LADO = 0.5;      // R$ por lado, por unidade
 const SILK_GRATIS_ACIMA = 1000; // a partir desta qtd, 1 lado sai grátis
 const TELA_NOVA_VALOR = 140;    // R$ cobrado 1x na primeira compra
-const EMB_PRAZO_DIAS_UTEIS = 15;
+const EMB_PRAZO_SILK = 15;    // dias úteis — silk / embalagem personalizada
+const EMB_PRAZO_DIGITAL = 4;  // dias úteis — impressão digital
 
 /* ----------------------------------------------------------------
    2) TAGS & ADESIVOS  (aba 🏷️ — mini gráfica)
@@ -409,14 +512,6 @@ const DTF = {
    4) VINIL / FILME DE RECORTE  (aba ✂️)
    - a4/a3/metro = preço da folha 40×21 / 40×42 / 40×100cm
 ---------------------------------------------------------------- */
-const VINIL_LARG_UTIL = 400; // mm
-const VINIL_MARGEM = 5;      // mm
-const VINIL_PRECOS = {
-  comum:  { label: 'Comum',         a4: 40,  a3: 70,  metro: 120 },
-  metal:  { label: 'Metálico/Neon', a4: 50,  a3: 85,  metro: 160 },
-  reflet: { label: 'Refletivo',     a4: 110, a3: 190, metro: 360 },
-  relevo: { label: 'Alto Relevo',   a4: 80,  a3: 130, metro: 260 },
-};
 
 /* Rodapé do orçamento */
 const VALIDADE_TXT = '_Orçamento válido por 7 dias_';
@@ -450,7 +545,7 @@ function switchTab(t){
 }
 
 // ------------------------- PEDIDO UNIFICADO -------------------------
-/* item: { id, origem, titulo, cliente:[linhas], trello:[linhas], subtotal, prazoEmb:bool } */
+/* item: { id, origem, titulo, cliente:[linhas], trello:[linhas], subtotal, prazoTipo:'silk'|'digital'|null } */
 let pedido = [];
 let seq = 0;
 
@@ -471,9 +566,12 @@ function gerarTextoWpp(){
     txt += `Subtotal: ${fmt(it.subtotal)}\n\n`;
   });
   txt += `━━━━━━━━━━━━━━━\n*TOTAL: ${fmt(total)}*\n\n`;
-  if (pedido.some(i=>i.prazoEmb)){
+  const temSilk = pedido.some(i=>i.prazoTipo==='silk');
+  const temDigital = pedido.some(i=>i.prazoTipo==='digital');
+  if (temSilk || temDigital){
     txt += PAGAMENTO_TXT + `\n`;
-    txt += `Previsão de entrega: ${addDiasUteis(EMB_PRAZO_DIAS_UTEIS)} (${EMB_PRAZO_DIAS_UTEIS} dias úteis)\n`;
+    if (temDigital) txt += `Previsão (imp. digital): ${addDiasUteis(EMB_PRAZO_DIGITAL)} (até ${EMB_PRAZO_DIGITAL} dias úteis)\n`;
+    if (temSilk) txt += `Previsão (silk/embalagem): ${addDiasUteis(EMB_PRAZO_SILK)} (${EMB_PRAZO_SILK} dias úteis)\n`;
   }
   txt += VALIDADE_TXT;
   return txt;
@@ -485,7 +583,10 @@ function gerarTextoTrello(){
   const tel  = document.getElementById('clienteTel').value.trim();
   let txt = `CLIENTE: ${nome || '—'}${tel ? ' | TEL: ' + tel : ''}\n`;
   pedido.forEach(it=>{ it.trello.forEach(l=> txt += l + `\n`); });
-  if (pedido.some(i=>i.prazoEmb)) txt += `ENTREGA: ${addDiasUteis(EMB_PRAZO_DIAS_UTEIS)}`;
+  const treSilk = pedido.some(i=>i.prazoTipo==='silk');
+  const treDigital = pedido.some(i=>i.prazoTipo==='digital');
+  if (treDigital) txt += `ENTREGA DIGITAL: ${addDiasUteis(EMB_PRAZO_DIGITAL)}\n`;
+  if (treSilk) txt += `ENTREGA SILK/EMB: ${addDiasUteis(EMB_PRAZO_SILK)}`;
   return txt.trim();
 }
 
@@ -556,7 +657,7 @@ function embSelecionar(idx){
   const chip = document.getElementById('embSelChip');
   chip.textContent = '✓ ' + embSel.name; chip.classList.add('visible');
   const qtys = Object.keys(embSel.prices).map(Number).sort((a,b)=>a-b);
-  document.getElementById('embQtdHint').textContent = 'Faixas: ' + qtys.join(' / ') + ' un';
+  document.getElementById('embQtdHint').textContent = '';
   embRenderLista(document.getElementById('embBusca').value);
   document.getElementById('embErro').classList.remove('visible');
 }
@@ -576,33 +677,44 @@ function embAdicionar(){
   const qtd = parseInt(document.getElementById('embQtd').value);
   if (!qtd || qtd<1){ erro.textContent='Informe uma quantidade válida.'; erro.classList.add('visible'); return; }
   const corProd = document.getElementById('embCorProd').value.trim();
-  const silk = document.getElementById('embSilk').checked;
+  const personaliz = document.getElementById('embSilk').checked;
+  const metodo = embMetodo; // 'silk' | 'digital'
   const lados = parseInt(document.getElementById('embLados').value)||1;
   const tinta = document.getElementById('embTinta').value.trim();
+  const digital = personaliz && metodo==='digital';
+  const silk = personaliz && metodo==='silk';
   const telaNova = silk && document.getElementById('embTela').value==='nova';
 
   const precoBase = embMelhorPreco(embSel, qtd);
-  const ladosCobrados = silk ? (qtd>=SILK_GRATIS_ACIMA ? Math.max(0,lados-1) : lados) : 0;
+  const ladosCobrados = personaliz ? (qtd>=SILK_GRATIS_ACIMA ? Math.max(0,lados-1) : lados) : 0;
   const precoUnit = precoBase + ladosCobrados*SILK_POR_LADO;
   const subtotal = precoUnit*qtd + (telaNova?TELA_NOVA_VALOR:0);
 
   const cliente = [`Quantidade: ${qtd.toLocaleString('pt-BR')} un`];
   if (corProd) cliente.push(`Cor do produto: ${corProd}`);
-  if (silk){
-    if (qtd>=SILK_GRATIS_ACIMA && lados===1) cliente.push(`Personalização: 1 lado — GRÁTIS`);
-    else if (qtd>=SILK_GRATIS_ACIMA) cliente.push(`Personalização: ${lados} lados (1 grátis + ${lados-1} cobrado${lados-1>1?'s':''})`);
-    else cliente.push(`Personalização: silk ${lados} lado${lados>1?'s':''}`);
-    if (tinta) cliente.push(`Tinta: ${tinta}`);
+  if (personaliz){
+    const metLabel = digital ? 'imp. digital' : 'silk';
+    if (qtd>=SILK_GRATIS_ACIMA && lados===1) cliente.push(`Personalização (${metLabel}): 1 lado — GRÁTIS`);
+    else if (qtd>=SILK_GRATIS_ACIMA) cliente.push(`Personalização (${metLabel}): ${lados} lados (1 grátis + ${lados-1} cobrado${lados-1>1?'s':''})`);
+    else cliente.push(`Personalização (${metLabel}): ${lados} lado${lados>1?'s':''}`);
+    if (digital) cliente.push(`Imp. Digital${tinta?' — '+tinta:''}`);
+    else if (tinta) cliente.push(`Tinta: ${tinta}`);
     if (telaNova) cliente.push(`Tela nova: ${fmt(TELA_NOVA_VALOR)} (1ª compra)`);
   }
   cliente.push(`Unitário: ${fmt(precoUnit)}`);
 
   const det=[];
   if (corProd) det.push('cor: '+corProd);
-  if (silk){ det.push('silk '+lados+' lado'+(lados>1?'s':'')); if (tinta) det.push('tinta '+tinta); if (telaNova) det.push('TELA NOVA'); }
+  if (personaliz){
+    det.push((digital?'digital ':'silk ')+lados+' lado'+(lados>1?'s':''));
+    if (digital) det.push('imp. digital'+(tinta?' '+tinta:''));
+    else if (tinta) det.push('tinta '+tinta);
+    if (telaNova) det.push('TELA NOVA');
+  }
   const trello = [`${embSel.name.toUpperCase()} | ${qtd.toLocaleString('pt-BR')}un${det.length?' | '+det.join(' | '):''}`];
 
-  pedido.push({ id:++seq, origem:'EMBALAGEM', titulo:embSel.name, cliente, trello, subtotal, prazoEmb:silk });
+  const prazoTipo = digital ? 'digital' : (silk ? 'silk' : null);
+  pedido.push({ id:++seq, origem:'EMBALAGEM', titulo:embSel.name, cliente, trello, subtotal, prazoTipo });
 
   // limpa campos
   embSel=null;
@@ -611,6 +723,7 @@ function embAdicionar(){
   document.getElementById('embTinta').value=''; document.getElementById('embQtdHint').textContent='';
   document.getElementById('embSilk').checked=false; document.getElementById('embSilkFields').classList.remove('visible');
   document.getElementById('embTela').value='existente';
+  embSetMetodo('silk');
   document.getElementById('embBusca').value=''; embRenderLista('');
   renderPedido(); toast('✓ Embalagem adicionada ao pedido');
 }
@@ -817,43 +930,95 @@ function dtfAdicionar(){
   renderPedido(); toast('✓ DTF adicionado ao pedido');
 }
 
-// ------------------------- ABA VINIL -------------------------
+// ------------------------- ABA VINIL (material + limpeza) -------------------------
 let vinSeq=0;
+const VINIL_LARG_UTIL=400, VINIL_MARGEM=5;
+const VIN_TIPOS={ comum:'Comum', metal:'Metálico/Neon', reflet:'Refletivo', relevo:'Alto Relevo' };
+const VIN_NIVEIS={ facil:'🟢 Fácil', medio:'🟡 Médio', dificil:'🟠 Difícil', osso:'🔴 Osso' };
 
+function vinToggle(bodyId,hintId){
+  const b=document.getElementById(bodyId), h=document.getElementById(hintId);
+  const open=b.classList.toggle('open');
+  h.textContent=open?'fechar ▴':'ajustar ▾';
+}
+function vinNum(id,def){ const el=document.getElementById(id); const v=el?parseFloat(el.value):NaN; return isNaN(v)?def:v; }
 function vinCols(w){ return w>0?Math.floor((VINIL_LARG_UTIL+VINIL_MARGEM)/(w+VINIL_MARGEM)):0; }
 function vinLins(alt,h){ return h>0?Math.max(0,Math.floor((alt+VINIL_MARGEM)/(h+VINIL_MARGEM))):0; }
-function vinCalcLinha(w,h,qty,tipo){
-  if (!w||!h||!qty||!tipo||!VINIL_PRECOS[tipo]) return null;
+
+// preços de material a partir dos painéis (custo × markup; A4/A3 fixos)
+function vinPrecos(){
+  const mk=vinNum('vinMarkup',3), out={};
+  for (const k of Object.keys(VIN_TIPOS)){
+    out[k]={ label:VIN_TIPOS[k], metro:vinNum('vinCusto-'+k,0)*mk, a4:vinNum('vinA4-'+k,0), a3:vinNum('vinA3-'+k,0) };
+  }
+  return out;
+}
+function vinCfgLimpeza(){
+  return {
+    cortes:{ facil:vinNum('vinLim-facil',50), medio:vinNum('vinLim-medio',300), dificil:vinNum('vinLim-dificil',600) },
+    add:{ facil:vinNum('vinAdd-facil',30), medio:vinNum('vinAdd-medio',60), dificil:vinNum('vinAdd-dificil',90), osso:vinNum('vinAdd-osso',120) }
+  };
+}
+function vinNivelAuto(pecasPorMetro){
+  const c=vinCfgLimpeza().cortes;
+  if (pecasPorMetro<=c.facil) return 'facil';
+  if (pecasPorMetro<=c.medio) return 'medio';
+  if (pecasPorMetro<=c.dificil) return 'dificil';
+  return 'osso';
+}
+
+// cálculo de uma linha: material (A4/A3/metro/corrido) + limpeza (metragem × R$/m do nível)
+function vinCalcLinha(w,h,qty,tipo,nivelForcado){
+  const P=vinPrecos();
+  if (!w||!h||!qty||!tipo||!P[tipo]) return null;
   const c=vinCols(w); if (c<=0) return null;
-  const p=VINIL_PRECOS[tipo];
-  // metragem realmente consumida pela arte (altura ocupada no rolo), sempre
+  const p=P[tipo];
+  const porA4=c*vinLins(210,h), porA3=c*vinLins(420,h), porMt=c*vinLins(1000,h);
+  if (porMt<=0) return null; // peça maior que 1m de comprimento
   const metros=(Math.ceil(qty/c)*(h+VINIL_MARGEM)-VINIL_MARGEM)/1000;
   const mTotal=Math.ceil(metros*100)/100;
-  const porA4=c*vinLins(210,h), porA3=c*vinLins(420,h), porMt=c*vinLins(1000,h);
-  if (porA4>0 && qty<=porA4) return {label:'1 folha A4', valor:p.a4, metros:mTotal};
-  if (porA3>0 && qty<=porA3) return {label:'1 folha A3', valor:p.a3, metros:mTotal};
-  if (porMt>0 && qty<=porMt) return {label:'1 metro',    valor:p.metro, metros:mTotal};
-  if (porMt>0){
-    return {label:`${fmtM(mTotal)}m corridos`, valor:mTotal*p.metro, metros:mTotal};
-  }
-  return null;
+
+  let material, faixa;
+  if (porA4>0 && qty<=porA4){ material=p.a4; faixa='1 folha A4'; }
+  else if (porA3>0 && qty<=porA3){ material=p.a3; faixa='1 folha A3'; }
+  else if (qty<=porMt){ material=p.metro; faixa='1 metro'; }
+  else { material=mTotal*p.metro; faixa=`${fmtM(mTotal)}m corridos`; }
+
+  const nivelKey=(nivelForcado&&VIN_NIVEIS[nivelForcado])?nivelForcado:vinNivelAuto(porMt);
+  const forcado=!!(nivelForcado&&VIN_NIVEIS[nivelForcado]);
+  const addM=vinCfgLimpeza().add[nivelKey]||0;
+  const limpeza=mTotal*addM;
+  const valor=material+limpeza;
+
+  return { porMt, metros:mTotal, faixa, material, limpeza, valor, nivelKey, nivelLabel:VIN_NIVEIS[nivelKey], forcado, addM,
+           rend:{ a4:porA4, a3:porA3, m:porMt } };
 }
+
+function vinAtualizaPainelPrecos(){
+  const P=vinPrecos();
+  for (const k of Object.keys(VIN_TIPOS)){
+    const el=document.getElementById('vinPM-'+k); if (el) el.textContent=fmt(P[k].metro);
+  }
+}
+
 function vinAddRow(){
   vinSeq++;
   const id='vin'+vinSeq;
-  const opts=Object.entries(VINIL_PRECOS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('');
+  const optsTipo=Object.entries(VIN_TIPOS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
+  const optsNiv=Object.entries(VIN_NIVEIS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
   const div=document.createElement('div');
   div.className='proj-row'; div.id='row-'+id;
   div.innerHTML=`
     <div class="proj-grid-vinil">
       <div class="field-group fg"><label>Arte / projeto</label><input type="text" id="${id}-nome" placeholder="ex: camiseta evento" oninput="vinRecalc()"></div>
-      <div class="field-group fg"><label>Tipo de vinil</label><select id="${id}-tipo" onchange="vinRecalc()"><option value="">— selecione —</option>${opts}</select></div>
+      <div class="field-group fg"><label>Tipo de vinil</label><select id="${id}-tipo" onchange="vinRecalc()"><option value="">— selecione —</option>${optsTipo}</select></div>
       <div class="field-group fg"><label>Cor</label><input type="text" id="${id}-cor" placeholder="ex: ouro" oninput="vinRecalc()"></div>
     </div>
     <div class="proj-grid-vinil2">
       <div class="field-group fg"><label>Larg (mm)</label><input type="number" id="${id}-w" min="1" max="${VINIL_LARG_UTIL}" placeholder="—" oninput="vinRecalc()"></div>
       <div class="field-group fg"><label>Comp (mm)</label><input type="number" id="${id}-h" min="1" placeholder="—" oninput="vinRecalc()"></div>
       <div class="field-group fg"><label>Qtde</label><input type="number" id="${id}-q" min="1" placeholder="0" oninput="vinRecalc()"></div>
+      <div class="field-group fg"><label>Limpeza</label><select id="${id}-niv" onchange="vinRecalc()"><option value="">auto</option>${optsNiv}</select></div>
     </div>
     <div class="proj-foot">
       <span id="${id}-info">— preencha tipo, medida e quantidade</span>
@@ -861,7 +1026,9 @@ function vinAddRow(){
     </div>`;
   document.getElementById('vinRows').appendChild(div);
 }
+
 function vinDados(){
+  vinAtualizaPainelPrecos();
   const linhas=[];
   document.querySelectorAll('#vinRows .proj-row').forEach(row=>{
     const id=row.id.replace('row-','');
@@ -871,35 +1038,44 @@ function vinDados(){
     const w=parseFloat(document.getElementById(id+'-w')?.value)||0;
     const h=parseFloat(document.getElementById(id+'-h')?.value)||0;
     const q=parseInt(document.getElementById(id+'-q')?.value)||0;
-    const calc=vinCalcLinha(w,h,q,tipo);
-    const c=vinCols(w);
-    const rend=(c>0&&h>0) ? { a4:c*vinLins(210,h), a3:c*vinLins(420,h), m:c*vinLins(1000,h) } : null;
+    const nivF=document.getElementById(id+'-niv')?.value||'';
+    const calc=vinCalcLinha(w,h,q,tipo,nivF);
+    const pmShow=(w&&h)?vinCols(w)*vinLins(1000,h):0;
     const info=document.getElementById(id+'-info');
     if (info){
       const partes=[];
-      if (calc) partes.push(`${calc.label} — <b>${fmt(calc.valor)}</b> (${fmt(calc.valor/q)}/un)`);
-      if (calc) partes.push(`Total: <b>${fmtM(calc.metros)}m</b>`);
-      if (rend) partes.push(`Rende: <b>${rend.a4}</b>/A4 · <b>${rend.a3}</b>/A3 · <b>${rend.m}</b>/metro`);
+      if (calc){
+        partes.push(`${calc.faixa} — material <b>${fmt(calc.material)}</b>`);
+        if (calc.limpeza>0) partes.push(`limpeza ${calc.nivelLabel}${calc.forcado?' (forçado)':''} <b>${fmt(calc.limpeza)}</b>`);
+        partes.push(`<b>${fmt(calc.valor)}</b> (${fmt(calc.valor/q)}/un)`);
+        partes.push(`Total: <b>${fmtM(calc.metros)}m</b>`);
+        partes.push(`Rende: <b>${calc.rend.a4}</b>/A4 · <b>${calc.rend.a3}</b>/A3 · <b>${calc.rend.m}</b>/metro`);
+      } else if (pmShow>0){
+        const nk=vinNivelAuto(pmShow);
+        partes.push(`${pmShow}/metro · limpeza auto: ${VIN_NIVEIS[nk]}`);
+      }
       info.innerHTML = partes.length ? partes.join(' &nbsp;·&nbsp; ') : '— preencha tipo, medida e quantidade';
     }
     if (calc) linhas.push({nome,tipo,cor,w,h,q,calc});
   });
   return linhas;
 }
+
 function vinRecalc(){ vinDados(); }
+
 function vinAdicionar(){
   const erro=document.getElementById('vinErro'); erro.classList.remove('visible');
   const linhas=vinDados();
   if (linhas.length===0){ erro.textContent='Preencha ao menos uma arte com tipo, medida e quantidade.'; erro.classList.add('visible'); return; }
   linhas.forEach(l=>{
-    const p=VINIL_PRECOS[l.tipo];
-    const titulo=`Vinil ${p.label}${l.cor?' — '+l.cor:''}${l.nome?' ('+l.nome+')':''}`;
-    pedido.push({
-      id:++seq, origem:'VINIL', titulo,
-      cliente:[`Medida: ${l.w}×${l.h}mm`,`Quantidade: ${l.q} un`,`Metragem: ${fmtM(l.calc.metros)}m`,`Unitário: ${fmt(l.calc.valor/l.q)}`],
-      trello:[`VINIL ${p.label.toUpperCase()}${l.cor?' '+l.cor.toUpperCase():''}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un | ${fmtM(l.calc.metros)}m`],
-      subtotal:l.calc.valor, prazoEmb:false
-    });
+    const c=l.calc;
+    const titulo=`Vinil ${VIN_TIPOS[l.tipo]}${l.cor?' — '+l.cor:''}${l.nome?' ('+l.nome+')':''}`;
+    const cli=[`Medida: ${l.w}×${l.h}mm`,`Quantidade: ${l.q} un`,`Metragem: ${fmtM(c.metros)}m`];
+    cli.push(`Material: ${fmt(c.material)}`);
+    if (c.limpeza>0) cli.push(`Limpeza (${c.nivelLabel.replace(/^[^ ]+ /,'')}): ${fmt(c.limpeza)}`);
+    cli.push(`Unitário: ${fmt(c.valor/l.q)}`);
+    const tre=`VINIL ${VIN_TIPOS[l.tipo].toUpperCase()}${l.cor?' '+l.cor.toUpperCase():''}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un | ${fmtM(c.metros)}m | limpeza ${c.nivelLabel.replace(/^[^ ]+ /,'').toUpperCase()}`;
+    pedido.push({ id:++seq, origem:'VINIL', titulo, cliente:cli, trello:[tre], subtotal:c.valor, prazoEmb:false });
   });
   document.getElementById('vinRows').innerHTML=''; vinAddRow();
   renderPedido(); toast('✓ Vinil adicionado ao pedido');
@@ -907,8 +1083,25 @@ function vinAdicionar(){
 
 // ------------------------- inicialização -------------------------
 document.getElementById('embBusca').addEventListener('input', e=>embRenderLista(e.target.value));
+let embMetodo = 'silk';
+function embSetMetodo(m){
+  embMetodo = m;
+  document.getElementById('embMetSilk').classList.toggle('active', m==='silk');
+  document.getElementById('embMetDigital').classList.toggle('active', m==='digital');
+  // tela só faz sentido no silk
+  document.getElementById('embTelaGroup').style.display = (m==='digital') ? 'none' : '';
+  // rótulo do campo de cor muda conforme o método
+  const tintaLabel = document.querySelector('#embTintaGroup label');
+  const tintaInput = document.getElementById('embTinta');
+  if (m==='digital'){ tintaLabel.textContent='Cor (opcional)'; tintaInput.placeholder='Imp. Digital — anote algo se precisar'; }
+  else { tintaLabel.textContent='Cor da tinta'; tintaInput.placeholder='Ex: preta, branca...'; }
+  const hint = document.getElementById('embPrazoHint');
+  hint.textContent = (m==='digital') ? '⏱️ Prazo impressão digital: até 4 dias úteis · sem custo de tela'
+                                     : '⏱️ Prazo silk/embalagem: 15 dias úteis';
+}
 document.getElementById('embSilk').addEventListener('change', function(){
   document.getElementById('embSilkFields').classList.toggle('visible', this.checked);
+  if (this.checked) embSetMetodo(embMetodo);
 });
 embRenderLista('');
 grFillSelect();
