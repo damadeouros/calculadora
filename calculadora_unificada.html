@@ -1071,8 +1071,6 @@ function vinAdicionar(){
     const c=l.calc;
     const titulo=`Vinil ${VIN_TIPOS[l.tipo]}${l.cor?' — '+l.cor:''}${l.nome?' ('+l.nome+')':''}`;
     const cli=[`Medida: ${l.w}×${l.h}mm`,`Quantidade: ${l.q} un`,`Metragem: ${fmtM(c.metros)}m`];
-    cli.push(`Material: ${fmt(c.material)}`);
-    if (c.limpeza>0) cli.push(`Limpeza (${c.nivelLabel.replace(/^[^ ]+ /,'')}): ${fmt(c.limpeza)}`);
     cli.push(`Unitário: ${fmt(c.valor/l.q)}`);
     const tre=`VINIL ${VIN_TIPOS[l.tipo].toUpperCase()}${l.cor?' '+l.cor.toUpperCase():''}${l.nome?' — '+l.nome.toUpperCase():''} | ${l.w}×${l.h}mm | ${l.q}un | ${fmtM(c.metros)}m | limpeza ${c.nivelLabel.replace(/^[^ ]+ /,'').toUpperCase()}`;
     pedido.push({ id:++seq, origem:'VINIL', titulo, cliente:cli, trello:[tre], subtotal:c.valor, prazoEmb:false });
